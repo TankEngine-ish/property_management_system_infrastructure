@@ -11,7 +11,7 @@ variable "KEYPAIR" {
 }
 
 variable "INSTANCETYPE" {
-    default = "t3.medium" 
+    default = "t2.micro" 
     type = string
     description = "Type of the ec2 instances"  
 }
@@ -21,8 +21,10 @@ variable "EC2Volume" {
     description = "the volume size of ec2 instances"
 }
 
-variable "terraform-remote-state-devopsguy-001" {
+variable "BUCKETNAME" {
     default = "statefilebucketdemo"
     description = "the s3 bucket name which you will save the statefile in"
   
 }
+
+// default values are simply a placeholder for the actual values that will be passed in via a .tfvars file or a -var argument via the CLI.

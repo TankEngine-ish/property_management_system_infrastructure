@@ -1,0 +1,5 @@
+AMI = "ami-02e2af61198e99faf"
+KEYPAIR = "myKeyPair"
+INSTANCETYPE = "t3.micro"
+EC2Volume = "10"
+BUCKETNAME = "terraform-remote-state-devopsguy-001"
