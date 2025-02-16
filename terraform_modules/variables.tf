@@ -1,7 +1,7 @@
 variable "AMI" {
     default = "ami-0e001c9271cf7f3b9"
     type = string
-    description = "The Type of AMI"
+    description = "The Type of the Template AMI"
 }
 
 variable "KEYPAIR" {
@@ -11,18 +11,19 @@ variable "KEYPAIR" {
 }
 
 variable "INSTANCETYPE" {
-    default = "t2.micro" 
+    default = "t3.micro" 
     type = string
-    description = "Type of the ec2 instances"  
+    description = "Type of EC2 instances. Set to one that is free tier eligible"  
 }
 
 variable "EC2Volume" {
-    default = "30"
-    description = "the volume size of ec2 instances"
+    default     = 10
+    type        = number
+    description = "The Actual Size of the EC2 instance (in gigabytes)"
 }
 
 variable "BUCKETNAME" {
-    default = "statefilebucketdemo"
+    default = "terraform-remote-state-devopsguy-001"
     description = "the s3 bucket name which you will save the statefile in"
   
 }
