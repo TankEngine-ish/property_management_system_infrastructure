@@ -1,3 +1,13 @@
+resource "aws_security_group" "kubernetes_sg" {
+  name        = "kubernetes-SG"
+  vpc_id      = aws_vpc.kubernetesVPC.id
+  description = "Base security group for Kubernetes nodes"
+
+  tags = {
+    Name = "kubernetes_sg"
+  }
+}
+
 resource "aws_vpc_security_group_ingress_rule" "allow_ssh" {
   security_group_id = aws_security_group.kubernetes_sg.id
   cidr_ipv4         = "0.0.0.0/0"
