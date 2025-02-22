@@ -28,4 +28,15 @@ variable "BUCKETNAME" {
   
 }
 
+variable "HAPROXY_INSTANCE_TYPE" {
+  default     = "t3.micro"
+  description = "Instance type for the HAProxy server"
+}
+
+variable "OPENVPN_INSTANCE_TYPE" {
+  default     = "t3.micro"
+  description = "Instance type for the OpenVPN server"
+}
+
+
 // default values are simply a placeholder for the actual values that will be passed in via a .tfvars file or a -var argument via the CLI.
