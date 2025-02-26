@@ -1,0 +1,33 @@
+---
+- name: Install HAProxy
+  apt:
+    name: haproxy
+    state: present
+    update_cache: yes
+
+- name: Create HAProxy configuration
+  template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    mode: 0644
+  notify: Restart HAProxy
+
+- name: Ensure SSH is allowed in UFW
+  ufw:
+    rule: allow
+    port: 22
+    proto: tcp
+  when: ansible_os_family == "Debian"
+
+- name: Ensure Kubernetes API port is allowed in UFW
+  ufw:
+    rule: allow
+    port: "{{ api_port }}"
+    proto: tcp
+  when: ansible_os_family == "Debian"
+
+- name: Enable and start HAProxy
+  systemd:
+    name: haproxy
+    enabled: yes
+    state: started
