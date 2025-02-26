@@ -32,7 +32,7 @@ resource "aws_internet_gateway" "IGW_TF" {
 }
 
 
-# Public Subnet (for HAProxy / OpenVPN / NAT Gateway)
+# Public Subnet (for HAProxy / NAT Gateway)
 
 resource "aws_subnet" "public_subnet" {
   vpc_id                  = aws_vpc.kubernetesVPC.id

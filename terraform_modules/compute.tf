@@ -58,7 +58,7 @@ resource "aws_instance" "haproxy_server" {
   # HAProxy in public subnet (map_public_ip_on_launch = true)
   subnet_id                   = aws_subnet.public_subnet.id
   associate_public_ip_address = true // new change
-  vpc_security_group_ids      = [aws_security_group.haproxy_openvpn_sg.id]
+  vpc_security_group_ids      = [aws_security_group.haproxy_sg.id]
 
   tags = {
     Name = "HAProxy-Server"

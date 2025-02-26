@@ -11,7 +11,7 @@ resource "aws_security_group" "kubernetes_sg" {
 # ✅ Allow HAProxy to access Kubernetes API (6443)
 resource "aws_vpc_security_group_ingress_rule" "allow_haproxy_to_k8s_api" {
   security_group_id            = aws_security_group.kubernetes_sg.id
-  referenced_security_group_id = aws_security_group.haproxy_openvpn_sg.id // this property allows me to specify another security group as the allowed source of traffic instead of using a CIDR range
+  referenced_security_group_id = aws_security_group.haproxy_sg.id // this property allows me to specify another security group as the allowed source of traffic instead of using a CIDR range
   from_port                    = 6443
   to_port                      = 6443
   ip_protocol                  = "tcp"
