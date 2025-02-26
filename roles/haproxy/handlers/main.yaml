@@ -1,0 +1,7 @@
+---
+- name: Restart HAProxy
+  systemd:
+    name: haproxy
+    state: restarted
+
+# when the template task places a new HAProxy config file, it "notifies" this handler to restart the service.
