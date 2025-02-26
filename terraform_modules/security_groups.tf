@@ -18,16 +18,6 @@ resource "aws_vpc_security_group_ingress_rule" "allow_haproxy_to_k8s_api" {
   description                  = "Allow HAProxy to communicate with Kubernetes API"
 }
 
-# ✅ Allow OpenVPN clients (your local machine) to access Kubernetes API (6443)
-resource "aws_vpc_security_group_ingress_rule" "allow_vpn_to_k8s_api" {
-  security_group_id = aws_security_group.kubernetes_sg.id // 
-  cidr_ipv4         = "192.168.0.0/24"                    # Your OpenVPN subnet
-  from_port         = 6443
-  to_port           = 6443
-  ip_protocol       = "tcp"
-  description       = "Allow OpenVPN clients to access Kubernetes API"
-}
-
 # ✅ Allow Kubernetes internal communication (Nodes & etcd)
 resource "aws_vpc_security_group_ingress_rule" "allow_internal_k8s" {
   security_group_id = aws_security_group.kubernetes_sg.id

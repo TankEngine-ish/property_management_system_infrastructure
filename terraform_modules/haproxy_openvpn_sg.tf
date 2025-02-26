@@ -29,16 +29,6 @@ resource "aws_vpc_security_group_ingress_rule" "allow_https" {
   description       = "Allow HTTPS access"
 }
 
-# Allow OpenVPN traffic (1194/UDP) - Restrict this!
-resource "aws_vpc_security_group_ingress_rule" "allow_openvpn" {
-  security_group_id = aws_security_group.haproxy_openvpn_sg.id
-  cidr_ipv4         = "192.168.0.174/32" # Restrict to your DHCP reserved IP
-  from_port         = 1194
-  to_port           = 1194
-  ip_protocol       = "udp"
-  description       = "Allow OpenVPN access for remote connection"
-}
-
 # Allow SSH access (Only for VPN Management)
 resource "aws_vpc_security_group_ingress_rule" "allow_ssh_vpn" {
   security_group_id = aws_security_group.haproxy_openvpn_sg.id

@@ -12,8 +12,3 @@ output "haproxy-server-ip" {
   value       = aws_instance.haproxy_server.public_ip
   description = "The public IP of the HAProxy server"
 }
-
-output "openvpn-server-ip" {
-  value       = aws_instance.openvpn_server.public_ip
-  description = "The public IP of the OpenVPN server"
-}

@@ -65,30 +65,6 @@ resource "aws_instance" "haproxy_server" {
   }
 }
 
-##################################################
-# OPENVPN SERVER (Public Subnet)
-##################################################
-resource "aws_instance" "openvpn_server" {
-  ami           = var.AMI
-  instance_type = var.OPENVPN_INSTANCE_TYPE
-  key_name      = var.KEYPAIR
-
-  root_block_device {
-    volume_size = 8
-    volume_type = "gp2"
-  }
-
-  # OpenVPN in public subnet
-  subnet_id                   = aws_subnet.public_subnet.id
-  associate_public_ip_address = true
-  vpc_security_group_ids      = [aws_security_group.haproxy_openvpn_sg.id]
-
-  tags = {
-    Name = "OpenVPN-Server"
-  }
-}
-
-
 
 
 
