@@ -39,10 +39,18 @@ resource "aws_vpc_security_group_ingress_rule" "allow_ssh_vpn" {
   description       = "Allow SSH access for VPN server"
 }
 
+# ✅ Allow all outbound traffic from HAProxy
+resource "aws_vpc_security_group_egress_rule" "haproxy_allow_all_egress" {
+  security_group_id = aws_security_group.haproxy_sg.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1"  # -1 means all protocols (i.e., all ports)
+  description       = "Allow all outbound traffic from HAProxy"
+}
+
 # Allow internal HAProxy -> Kubernetes Private Subnet Communication
 resource "aws_vpc_security_group_ingress_rule" "allow_haproxy_to_k8s" {
   security_group_id = aws_security_group.haproxy_sg.id
-  cidr_ipv4         = "185.240.147.99/32" # Private subnet range
+  cidr_ipv4         = "10.0.1.0/24" # Private subnet range
   from_port         = 6443
   to_port           = 6443
   ip_protocol       = "tcp"
