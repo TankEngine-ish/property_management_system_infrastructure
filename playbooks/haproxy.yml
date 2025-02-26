@@ -1,8 +1,0 @@
----
-- hosts: haproxy
-  become: true
-  vars:
-    api_port: 6443
-    master_private_ip: "{{ hostvars['master']['ansible_host'] }}"
-  roles:
-    - haproxy
