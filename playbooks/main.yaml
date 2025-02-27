@@ -1,0 +1,25 @@
+---
+# Common setup for all nodes
+- hosts: kubernetes
+  become: true
+  roles:
+    - common
+
+# Master node setup
+- hosts: master
+  become: true
+  vars:
+    pod_network_cidr: "192.168.0.0/16"  # For Calico CNI
+    kubernetes_version: "1.29.0"
+    control_plane_endpoint: "{{ hostvars['haproxy']['ansible_host'] }}"
+    api_port: 6443
+  roles:
+    - master-node
+
+# Worker node setup
+- hosts: worker
+  become: true
+  vars:
+    kubernetes_version: "1.29.0"
+  roles:
+    - worker-node
