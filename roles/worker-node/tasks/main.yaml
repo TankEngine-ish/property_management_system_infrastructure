@@ -1,0 +1,12 @@
+---
+- name: Check if join command file exists
+  stat:
+    path: /home/ubuntu/joincommand.sh
+  register: join_file
+
+- name: Join the worker node to the cluster
+  shell: |
+    chmod +x /home/ubuntu/joincommand.sh
+    /home/ubuntu/joincommand.sh
+  when: join_file.stat.exists and join_file.stat.size > 0
+  ignore_errors: true

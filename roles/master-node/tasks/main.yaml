@@ -1,0 +1,84 @@
+---
+- name: Get the external IP of the machine
+  shell: curl -s ifconfig.me
+  register: ipaddr
+  ignore_errors: true
+  changed_when: false
+
+- name: Get the short hostname of the machine
+  command: hostname -s
+  register: nodename
+  changed_when: false
+
+- name: Create kubeadm config file
+  template:
+    src: kubeadm-config.yaml.j2
+    dest: /tmp/kubeadm-config.yaml
+    mode: 0644
+
+- name: Initialize the Kubernetes cluster
+  shell: |
+    kubeadm init --config=/tmp/kubeadm-config.yaml --upload-certs --ignore-preflight-errors=Swap
+  register: kubeadm_init
+  ignore_errors: true
+
+- name: Create .kube directory for root user
+  file:
+    path: /root/.kube
+    state: directory
+    mode: '0755'
+
+- name: Copy admin.conf to root user kube config
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /root/.kube/config
+    remote_src: yes
+    mode: '0644'
+
+- name: Create .kube directory for ubuntu user
+  file:
+    path: /home/ubuntu/.kube
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+
+- name: Copy admin.conf to ubuntu user kube config
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /home/ubuntu/.kube/config
+    remote_src: yes
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+
+- name: Apply Calico CNI
+  shell: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+  changed_when: true
+
+- name: Create join command file
+  shell: |
+    kubeadm token create --print-join-command > /home/ubuntu/joincommand.sh
+  args:
+    executable: /bin/bash
+  changed_when: true
+
+- name: Make join command executable
+  file:
+    path: /home/ubuntu/joincommand.sh
+    mode: '0755'
+    owner: ubuntu
+    group: ubuntu
+
+- name: Fetch join command to control machine
+  fetch:
+    src: /home/ubuntu/joincommand.sh
+    dest: ./joincommand.sh
+    flat: yes
+
+- name: Copy join command to worker node(s)
+  shell: |
+    scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+    -o ProxyCommand="ssh -i ~/Downloads/keypair.pem -W %h:%p ubuntu@{{ hostvars['openvpn']['ansible_host'] }}" \
+    /home/ubuntu/joincommand.sh ubuntu@{{ hostvars['worker']['ansible_host'] }}:/home/ubuntu/joincommand.sh
+  ignore_errors: true
