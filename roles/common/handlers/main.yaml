@@ -1,0 +1,14 @@
+---
+- name: Restart CRIO
+  systemd:
+    name: crio
+    state: restarted
+
+- name: Restart kubelet
+  systemd:
+    name: kubelet
+    state: restarted
+    daemon_reload: yes
+
+- name: Reload sysctl
+  command: sysctl --system
