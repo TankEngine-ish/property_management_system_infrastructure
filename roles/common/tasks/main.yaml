@@ -17,6 +17,7 @@
     - { key: 'net.bridge.bridge-nf-call-iptables', value: '1' }
     - { key: 'net.bridge.bridge-nf-call-ip6tables', value: '1' }
     - { key: 'net.ipv4.ip_forward', value: '1' }
+  notify: Reload sysctl
 
 - name: Apply all system-wide sysctl settings
   command: sysctl --system
