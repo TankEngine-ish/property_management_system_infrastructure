@@ -1,12 +1,13 @@
 ---
-- name: Check if join command file exists
-  stat:
-    path: /home/ubuntu/joincommand.sh
-  register: join_file
+- name: Copy join command to worker
+  copy:
+    src: /tmp/joincommand.sh
+    dest: /home/ubuntu/joincommand.sh
+    mode: '0755'
 
 - name: Join the worker node to the cluster
   shell: |
-    chmod +x /home/ubuntu/joincommand.sh
     /home/ubuntu/joincommand.sh
-  when: join_file.stat.exists and join_file.stat.size > 0
-  ignore_errors: true
+  register: join_result
+  changed_when: join_result.rc == 0
+  failed_when: join_result.rc != 0 and "already exists" not in join_result.stderr
