@@ -11,9 +11,9 @@ variable "KEYPAIR" {
 }
 
 variable "INSTANCETYPE" {
-  default     = "t3.micro"
+  default     = "t3.small"
   type        = string
-  description = "Type of EC2 instances. Set to one that is free tier eligible"
+  description = "Type of EC2 instances. Changed from t3.micro to t3.small"
 }
 
 variable "EC2Volume" {
