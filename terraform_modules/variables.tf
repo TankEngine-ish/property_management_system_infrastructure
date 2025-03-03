@@ -10,10 +10,14 @@ variable "KEYPAIR" {
   description = "Keypair to Access EC2 instances SSH"
 }
 
-variable "INSTANCETYPE" {
+variable "MASTER_INSTANCE_TYPE" {
+  description = "Instance type for the Master node"
   default     = "t3.small"
-  type        = string
-  description = "Type of EC2 instances. Changed from t3.micro to t3.small"
+}
+
+variable "WORKER_INSTANCE_TYPE" {
+  description = "Instance type for the Worker node"
+  default     = "t3.micro"
 }
 
 variable "EC2Volume" {
