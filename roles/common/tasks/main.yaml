@@ -50,12 +50,10 @@
 - name: Add CRI-O repository
   shell: |
     export OS=xUbuntu_22.04
-    export VERSION=1.27  # doesn't work with 1.30
+    export VERSION=1.27 
 
-    # remove old repository files because there might be a conflict with an older cached version of cri-o for some reason
     rm -f /etc/apt/sources.list.d/devel:kubic:*.list
     
-    # add the new repository
     echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/ /" > /tmp/devel:kubic:libcontainers:stable.list
     echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/ /" > /tmp/devel:kubic:libcontainers:stable:cri-o:$VERSION.list
     
