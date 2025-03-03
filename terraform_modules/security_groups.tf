@@ -8,7 +8,7 @@ resource "aws_security_group" "kubernetes_sg" {
   }
 }
 
-# ✅ Allow HAProxy to access Kubernetes API (6443)
+# HAProxy talking with the Kubernetes API (6443)
 resource "aws_vpc_security_group_ingress_rule" "allow_haproxy_to_k8s_api" {
   security_group_id            = aws_security_group.kubernetes_sg.id
   referenced_security_group_id = aws_security_group.haproxy_sg.id // this property allows me to specify another security group as the allowed source of traffic instead of using a CIDR range
@@ -18,7 +18,7 @@ resource "aws_vpc_security_group_ingress_rule" "allow_haproxy_to_k8s_api" {
   description                  = "Allow HAProxy to communicate with Kubernetes API"
 }
 
-# ✅ Allow Kubernetes internal communication (Nodes & etcd)
+# Kubernetes internal communication (Nodes & etcd)
 resource "aws_vpc_security_group_ingress_rule" "allow_internal_k8s" {
   security_group_id = aws_security_group.kubernetes_sg.id
   cidr_ipv4         = "10.0.1.0/24" # Private subnet
@@ -28,7 +28,7 @@ resource "aws_vpc_security_group_ingress_rule" "allow_internal_k8s" {
   description       = "Allow internal Kubernetes communication between nodes"
 }
 
-# ✅ Allow ICMP (ping) only within the private subnet
+# ICMP (ping) only within the private subnet
 resource "aws_vpc_security_group_ingress_rule" "allow_icmp_private" {
   security_group_id = aws_security_group.kubernetes_sg.id
   cidr_ipv4         = "10.0.1.0/24"
@@ -38,12 +38,22 @@ resource "aws_vpc_security_group_ingress_rule" "allow_icmp_private" {
   description       = "Allow ping within the private subnet"
 }
 
-# ✅ Keep all outbound traffic open (for updates, package installs, etc.)
+# all outbound traffic open (for updates, package installs, etc.)
 resource "aws_vpc_security_group_egress_rule" "allow_all_egress" {
   security_group_id = aws_security_group.kubernetes_sg.id
   cidr_ipv4         = "0.0.0.0/0"
   ip_protocol       = "-1"
   description       = "Allow all outbound traffic"
+}
+
+# SSH access from HAProxy to Kubernetes nodes
+resource "aws_vpc_security_group_ingress_rule" "allow_ssh_from_haproxy" {
+  security_group_id            = aws_security_group.kubernetes_sg.id
+  referenced_security_group_id = aws_security_group.haproxy_sg.id
+  from_port                    = 22
+  to_port                      = 22
+  ip_protocol                  = "tcp"
+  description                  = "Allow SSH access from HAProxy"
 }
 
 
