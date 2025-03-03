@@ -73,12 +73,22 @@
 - name: Fetch join command to control machine
   fetch:
     src: /home/ubuntu/joincommand.sh
-    dest: ./joincommand.sh
+    dest: /tmp/joincommand.sh
     flat: yes
 
-- name: Copy join command to worker node(s)
-  shell: |
-    scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-    -o ProxyCommand="ssh -i ~/Downloads/keypair.pem -W %h:%p ubuntu@{{ hostvars['openvpn']['ansible_host'] }}" \
-    /home/ubuntu/joincommand.sh ubuntu@{{ hostvars['worker']['ansible_host'] }}:/home/ubuntu/joincommand.sh
-  ignore_errors: true
+
+# below is using SCP to copy the join command to the worker node(s) and run it (obsolete)
+
+# - name: Copy join command to worker node(s)
+#   shell: |
+#     scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+#     -o ProxyCommand="ssh -i /home/nito/myKeyPair.pem -W %h:%p ubuntu@{{ hostvars['haproxy']['ansible_host'] }}" \
+#     /home/ubuntu/joincommand.sh ubuntu@{{ hostvars['worker']['ansible_host'] }}:/home/ubuntu/joincommand.sh
+#   ignore_errors: true
+
+# - name: Run join command on worker node
+#   shell: |
+#     chmod +x /home/ubuntu/joincommand.sh
+#     sudo /home/ubuntu/joincommand.sh
+#   ignore_errors: true
+#   register: join_output
