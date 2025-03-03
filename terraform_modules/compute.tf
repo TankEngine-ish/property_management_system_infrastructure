@@ -3,7 +3,7 @@
 ##################################################
 resource "aws_instance" "master_node" {
   ami           = var.AMI
-  instance_type = var.INSTANCETYPE
+  instance_type = var.MASTER_INSTANCE_TYPE
   key_name      = var.KEYPAIR
 
   root_block_device {
@@ -25,7 +25,7 @@ resource "aws_instance" "master_node" {
 ##################################################
 resource "aws_instance" "worker_node" {
   ami           = var.AMI
-  instance_type = var.INSTANCETYPE
+  instance_type = var.WORKER_INSTANCE_TYPE
   key_name      = var.KEYPAIR
 
   root_block_device {
