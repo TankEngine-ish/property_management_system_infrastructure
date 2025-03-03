@@ -1,4 +1,4 @@
-# Security group for HAProxy in the Public Subnet
+# security group for HAProxy in the Public Subnet
 resource "aws_security_group" "haproxy_sg" {
   name        = "haproxy-sg"
   vpc_id      = aws_vpc.kubernetesVPC.id
@@ -9,7 +9,7 @@ resource "aws_security_group" "haproxy_sg" {
   }
 }
 
-# Allow HTTP traffic to HAProxy
+# HTTP traffic to HAProxy
 resource "aws_vpc_security_group_ingress_rule" "allow_http" {
   security_group_id = aws_security_group.haproxy_sg.id
   cidr_ipv4         = "0.0.0.0/0"
@@ -19,7 +19,7 @@ resource "aws_vpc_security_group_ingress_rule" "allow_http" {
   description       = "Allow HTTP access"
 }
 
-# Allow HTTPS traffic to HAProxy
+# HTTPS traffic to HAProxy
 resource "aws_vpc_security_group_ingress_rule" "allow_https" {
   security_group_id = aws_security_group.haproxy_sg.id
   cidr_ipv4         = "0.0.0.0/0"
@@ -29,17 +29,16 @@ resource "aws_vpc_security_group_ingress_rule" "allow_https" {
   description       = "Allow HTTPS access"
 }
 
-# Allow SSH access (Only for VPN Management)
+# SSH access 
 resource "aws_vpc_security_group_ingress_rule" "allow_ssh_vpn" {
   security_group_id = aws_security_group.haproxy_sg.id
-  cidr_ipv4         = "185.240.147.99/32" # Restrict to your static home IP
+  cidr_ipv4         = "185.240.147.99/32" 
   from_port         = 22
   to_port           = 22
   ip_protocol       = "tcp"
   description       = "Allow SSH access for VPN server"
 }
 
-# ✅ Allow all outbound traffic from HAProxy
 resource "aws_vpc_security_group_egress_rule" "haproxy_allow_all_egress" {
   security_group_id = aws_security_group.haproxy_sg.id
   cidr_ipv4         = "0.0.0.0/0"
@@ -47,17 +46,14 @@ resource "aws_vpc_security_group_egress_rule" "haproxy_allow_all_egress" {
   description       = "Allow all outbound traffic from HAProxy"
 }
 
-# Allow internal HAProxy -> Kubernetes Private Subnet Communication
-resource "aws_vpc_security_group_ingress_rule" "allow_haproxy_to_k8s" {
+resource "aws_vpc_security_group_ingress_rule" "allow_k8s_api_access" {
   security_group_id = aws_security_group.haproxy_sg.id
-  cidr_ipv4         = "10.0.1.0/24" # Private subnet range
+  cidr_ipv4         = "0.0.0.0/0"  
   from_port         = 6443
   to_port           = 6443
   ip_protocol       = "tcp"
-  description       = "Allow HAProxy to communicate with Kubernetes API"
+  description       = "Allow external access to Kubernetes API through HAProxy"
 }
-
-
 
 
 
