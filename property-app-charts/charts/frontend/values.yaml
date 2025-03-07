@@ -47,3 +47,16 @@ readinessProbe:
   failureThreshold: 6
   successThreshold: 1
   path: /api/health
+
+
+# Ingress configuration 
+ingress:
+  enabled: false  # with 'enabled' set to 'false' Helm will not create an Ingress object anyway
+  className: ""
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
