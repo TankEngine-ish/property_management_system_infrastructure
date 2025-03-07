@@ -1,0 +1,65 @@
+# Default values for postgres chart
+
+# These fields allow chart users to override naming without modifying templates
+# nameOverride: ""
+# fullnameOverride: ""
+
+replicaCount: 1
+
+image:
+  repository: postgres
+  tag: "15"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 5432
+
+persistence:
+  enabled: true
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  size: 8Gi
+
+# Database configuration
+database:
+  name: propertydb
+  user: pguser
+  # For production, you should use Kubernetes secrets
+  # This is just for demonstration
+  password: pgpassword
+
+# Resource limits
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+# Pod security context
+securityContext:
+  fsGroup: 999
+
+# Container security context
+containerSecurityContext:
+  runAsUser: 999
+  runAsNonRoot: true
+
+# Liveness and readiness probes
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+  successThreshold: 1
+
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+  successThreshold: 1

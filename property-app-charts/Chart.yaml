@@ -1,0 +1,19 @@
+apiVersion: v2
+name: property-app
+description: A Helm chart for property management system
+type: application
+version: 0.1.0 # this is the version of the Helm chart
+appVersion: "1.0.2"  # this matches my current application version
+dependencies:
+  - name: postgres
+    version: 0.1.0
+    repository: file://charts/postgres
+    condition: postgres.enabled
+  - name: backend
+    version: 0.1.0
+    repository: file://charts/backend
+    condition: backend.enabled
+  - name: frontend
+    version: 0.1.0
+    repository: file://charts/frontend
+    condition: frontend.enabled

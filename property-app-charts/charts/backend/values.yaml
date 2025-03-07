@@ -1,0 +1,50 @@
+# Default values for backend chart
+replicaCount: 1
+
+image:
+  repository: goapp
+  tag: "1.0.2"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8000
+
+# Environment variables
+env:
+  # The format for DATABASE_URL should match your configuration
+  DATABASE_URL: "postgres://pguser:pgpassword@{{ .Release.Name }}-postgres:5432/propertydb?sslmode=disable"
+
+# Resource limits
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Pod security context
+securityContext: {}
+
+# Container security context
+containerSecurityContext: {}
+
+# Liveness and readiness probes
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+  successThreshold: 1
+  path: /health
+
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+  successThreshold: 1
+  path: /health

@@ -1,0 +1,24 @@
+# Global values shared across all subcharts
+global:
+  environment: development
+
+# Enable or disable subcharts
+postgres:
+  enabled: true
+  # Override postgres subchart values
+  database:
+    name: propertydb
+    user: pguser
+    password: pgpassword
+
+backend:
+  enabled: true
+  # Override backend subchart values
+  env:
+    DATABASE_URL: "postgres://{{ .Values.postgres.database.user }}:{{ .Values.postgres.database.password }}@{{ .Release.Name }}-postgres:5432/{{ .Values.postgres.database.name }}?sslmode=disable"
+
+frontend:
+  enabled: true
+  # Override frontend subchart values
+  env:
+    NEXT_PUBLIC_API_URL: "http://{{ .Release.Name }}-backend:8000"
