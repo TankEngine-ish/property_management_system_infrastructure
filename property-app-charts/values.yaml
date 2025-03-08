@@ -5,12 +5,29 @@ global:
 # Enable or disable subcharts
 postgres:
   enabled: true
-  # Override postgres subchart values
+  # Database configuration
   database:
     name: "propertydb"
     user: "pguser"
-    password: "pgpassword"
-
+    password: "pgpassword"  # In production, use a secret reference
+  
+  # Persistence configuration
+  persistence:
+    enabled: true
+    storageClass: "local-storage"
+    accessMode: ReadWriteOnce
+    size: 8Gi
+  
+  # Resource settings
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  
+  # Scaling
   autoscaling:
     enabled: false
     minReplicas: 1
@@ -19,14 +36,42 @@ postgres:
 
 backend:
   enabled: true
-  # Database configuration for the backend
+  
+  # Database configuration for backend to connect to postgres
   database:
     name: "propertydb"
     user: "pguser"
-    password: "pgpassword"
+    password: "pgpassword"  # In production, use a secret reference
   
-  # You can remove the env section as we'll use the ConfigMap instead
+  # Resource settings
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
   
+  # Health checks
+  livenessProbe:
+    enabled: true
+    path: /health
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+    successThreshold: 1
+  
+  readinessProbe:
+    enabled: true
+    path: /health
+    initialDelaySeconds: 20
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+    successThreshold: 1
+  
+  # Scaling
   autoscaling:
     enabled: false
     minReplicas: 1
@@ -35,10 +80,40 @@ backend:
 
 frontend:
   enabled: true
-  # Override frontend subchart values
+  
+  # API URL configuration - this will properly set the environment variable 
   env:
     NEXT_PUBLIC_API_URL: "http://{{ .Release.Name }}-backend:8000"
-
+  
+  # Resource settings
+  resources:
+    limits:
+      cpu: 300m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  
+  # Health checks
+  livenessProbe:
+    enabled: true
+    path: /api/health
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+    successThreshold: 1
+  
+  readinessProbe:
+    enabled: true
+    path: /api/health
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+    successThreshold: 1
+  
+  # Scaling
   autoscaling:
     enabled: false
     minReplicas: 1
