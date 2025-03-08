@@ -16,8 +16,8 @@ service:
   port: 5432
 
 persistence:
-  enabled: true
-  storageClass: ""
+  enabled: false
+  storageClass: "local-storage"
   accessMode: ReadWriteOnce
   size: 8Gi
 
@@ -25,8 +25,6 @@ persistence:
 database:
   name: propertydb
   user: pguser
-  # For production, you should use Kubernetes secrets
-  # This is just for demonstration
   password: pgpassword
 
 # Resource limits
@@ -63,3 +61,15 @@ readinessProbe:
   timeoutSeconds: 5
   failureThreshold: 6
   successThreshold: 1
+
+# Ingress configuration 
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []

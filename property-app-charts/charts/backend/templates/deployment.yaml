@@ -16,15 +16,20 @@ spec:
     spec:
       securityContext:
         {{- toYaml .Values.securityContext | nindent 8 }}
+      initContainers:
+        - name: wait-for-postgres
+          image: busybox:1.28
+          command: ['sh', '-c', 'until nc -z {{ .Release.Name }}-postgres 5432; do echo "Waiting for postgres..."; sleep 2; done;']
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.containerSecurityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          env:
-            - name: DATABASE_URL
-              value: {{ tpl .Values.env.DATABASE_URL . | quote }}
+          volumeMounts:
+            - name: env-file
+              mountPath: /app/.env
+              subPath: .env
           ports:
             - name: http
               containerPort: 8000
@@ -53,3 +58,7 @@ spec:
           {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: env-file
+          configMap:
+            name: {{ include "backend.fullname" . }}-env-file

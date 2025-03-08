@@ -7,18 +7,40 @@ postgres:
   enabled: true
   # Override postgres subchart values
   database:
-    name: propertydb
-    user: pguser
-    password: pgpassword
+    name: "propertydb"
+    user: "pguser"
+    password: "pgpassword"
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
 
 backend:
   enabled: true
-  # Override backend subchart values
-  env:
-    DATABASE_URL: "postgres://{{ .Values.postgres.database.user }}:{{ .Values.postgres.database.password }}@{{ .Release.Name }}-postgres:5432/{{ .Values.postgres.database.name }}?sslmode=disable"
+  # Database configuration for the backend
+  database:
+    name: "propertydb"
+    user: "pguser"
+    password: "pgpassword"
+  
+  # You can remove the env section as we'll use the ConfigMap instead
+  
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
 
 frontend:
   enabled: true
   # Override frontend subchart values
   env:
     NEXT_PUBLIC_API_URL: "http://{{ .Release.Name }}-backend:8000"
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
