@@ -20,7 +20,7 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.containerSecurityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: POSTGRES_DB
@@ -38,7 +38,7 @@ spec:
                 secretKeyRef:
                   name: {{ include "postgres.fullname" . }}-credentials
                   key: postgres-password
-            # Add this new env var for PostgreSQL data directory
+            # Add this for PostgreSQL data directory
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
           ports:
@@ -80,6 +80,7 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /var/lib/postgresql/data
+              subPath: pgdata  # Added subPath to avoid permission issues
       volumes:
         - name: data
           {{- if .Values.persistence.enabled }}
