@@ -1,3 +1,4 @@
+# property-app-charts/charts/backend/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -16,49 +17,91 @@ spec:
     spec:
       securityContext:
         {{- toYaml .Values.securityContext | nindent 8 }}
-      initContainers:
-        - name: wait-for-postgres
-          image: busybox:1.28
-          command: ['sh', '-c', 'until nc -z {{ .Release.Name }}-postgres 5432; do echo "Waiting for postgres..."; sleep 2; done;']
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.containerSecurityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          volumeMounts:
-            - name: env-file
-              mountPath: /app/.env
-              subPath: .env
+          env:
+            - name: DATABASE_URL
+              value: postgres://{{ .Values.database.user }}:{{ .Values.database.password }}@{{ .Release.Name }}-postgres.{{ .Release.Namespace }}.svc.cluster.local:5432/{{ .Values.database.name }}?sslmode=disable
           ports:
             - name: http
               containerPort: 8000
               protocol: TCP
-          {{- if .Values.livenessProbe.enabled }}
           livenessProbe:
             httpGet:
-              path: {{ .Values.livenessProbe.path }}
+              path: /health
               port: http
-            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
-            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
-            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
-            successThreshold: {{ .Values.livenessProbe.successThreshold }}
-          {{- end }}
-          {{- if .Values.readinessProbe.enabled }}
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
           readinessProbe:
             httpGet:
-              path: {{ .Values.readinessProbe.path }}
+              path: /health
               port: http
-            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
-            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
-            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
-            successThreshold: {{ .Values.readinessProbe.successThreshold }}
-          {{- end }}
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-      volumes:
-        - name: env-file
-          configMap:
-            name: {{ include "backend.fullname" . }}-env-file
+
+
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: {{ include "backend.fullname" . }}
+#   labels:
+#     {{- include "backend.labels" . | nindent 4 }}
+# spec:
+#   replicas: {{ .Values.replicaCount }}
+#   selector:
+#     matchLabels:
+#       {{- include "backend.selectorLabels" . | nindent 6 }}
+#   template:
+#     metadata:
+#       labels:
+#         {{- include "backend.selectorLabels" . | nindent 8 }}
+#     spec:
+#       securityContext:
+#         {{- toYaml .Values.securityContext | nindent 8 }}
+#       containers:
+#         - name: {{ .Chart.Name }}
+#           securityContext:
+#             {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+#           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+#           imagePullPolicy: {{ .Values.image.pullPolicy }}
+#           env:
+#             - name: DATABASE_URL
+#               value: postgres://{{ .Values.database.user }}:{{ .Values.database.password }}@{{ .Release.Name }}-postgres:5432/{{ .Values.database.name }}?sslmode=disable
+#           ports:
+#             - name: http
+#               containerPort: 8000
+#               protocol: TCP
+#           {{- if .Values.livenessProbe.enabled }}
+#           livenessProbe:
+#             httpGet:
+#               path: /health
+#               port: http
+#             initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+#             periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+#             timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+#             failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+#             successThreshold: {{ .Values.livenessProbe.successThreshold }}
+#           {{- end }}
+#           {{- if .Values.readinessProbe.enabled }}
+#           readinessProbe:
+#             httpGet:
+#               path: /health
+#               port: http
+#             initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+#             periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+#             timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+#             failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+#             successThreshold: {{ .Values.readinessProbe.successThreshold }}
+#           {{- end }}
+#           resources:
+#             {{- toYaml .Values.resources | nindent 12 }}
