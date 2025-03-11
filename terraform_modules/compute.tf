@@ -11,7 +11,6 @@ resource "aws_instance" "master_node" {
     volume_type = "gp2" // gp2 is a General Purpose SSD (GP2) volume on AWS EBS (Elastic Block Store)
   }
 
-  # Master in private subnet
   subnet_id              = aws_subnet.private_subnet.id
   vpc_security_group_ids = [aws_security_group.kubernetes_sg.id]
 
@@ -33,7 +32,6 @@ resource "aws_instance" "worker_node" {
     volume_type = "gp2"
   }
 
-  # Worker in private subnet
   subnet_id              = aws_subnet.private_subnet.id
   vpc_security_group_ids = [aws_security_group.kubernetes_sg.id]
 
@@ -55,7 +53,7 @@ resource "aws_instance" "haproxy_server" {
     volume_type = "gp2"
   }
 
-  # HAProxy in public subnet (map_public_ip_on_launch = true)
+
   subnet_id                   = aws_subnet.public_subnet.id
   associate_public_ip_address = true // new change
   vpc_security_group_ids      = [aws_security_group.haproxy_sg.id]
