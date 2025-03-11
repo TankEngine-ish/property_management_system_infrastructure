@@ -1,0 +1,55 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: property-gateway
+  namespace: property-app
+spec:
+  selector:
+    istio: ingressgateway # default Istio ingress gateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*" # Allows any host, I can restrict this in production
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: property-frontend
+  namespace: property-app
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - property-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: property-app-frontend
+        port:
+          number: 3000
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: property-backend
+  namespace: property-app
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - property-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /api
+    route:
+    - destination:
+        host: property-app-backend
+        port:
+          number: 8000
