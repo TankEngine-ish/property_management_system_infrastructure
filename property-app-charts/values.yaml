@@ -1,33 +1,29 @@
-# Global values shared across all subcharts
+
 global:
   environment: development
 
-# Enable or disable subcharts
+
 postgres:
   enabled: true
-  # Database configuration
   database:
     name: "propertydb"
     user: "pguser"
-    password: "pgpassword"  # In production, use a secret reference
+    password: "pgpassword"  # In production, I use a secret reference
   
-  # Persistence configuration
   persistence:
     enabled: true
     storageClass: "local-storage"
     accessMode: ReadWriteOnce
     size: 8Gi
   
-  # Resource settings
   resources:
     limits:
-      cpu: 500m
-      memory: 512Mi
+      cpu: 400m
+      memory: 400Mi
     requests:
-      cpu: 100m
-      memory: 256Mi
+      cpu: 50m
+      memory: 200Mi
   
-  # Scaling
   autoscaling:
     enabled: false
     minReplicas: 1
@@ -37,22 +33,19 @@ postgres:
 backend:
   enabled: true
   
-  # Database configuration for backend to connect to postgres
   database:
     name: "propertydb"
     user: "pguser"
-    password: "pgpassword"  # In production, use a secret reference
+    password: "pgpassword"  # I am using a secret reference
   
-  # Resource settings
   resources:
     limits:
-      cpu: 500m
-      memory: 512Mi
+      cpu: 300m
+      memory: 300Mi
     requests:
-      cpu: 100m
-      memory: 128Mi
+      cpu: 50m
+      memory: 100Mi
   
-  # Health checks
   livenessProbe:
     enabled: true
     path: /health
@@ -71,7 +64,6 @@ backend:
     failureThreshold: 6
     successThreshold: 1
   
-  # Scaling
   autoscaling:
     enabled: false
     minReplicas: 1
@@ -79,22 +71,19 @@ backend:
     targetCPUUtilizationPercentage: 80
 
 frontend:
-  enabled: true
-  
-  # API URL configuration - this will properly set the environment variable 
   env:
-    NEXT_PUBLIC_API_URL: "http://{{ .Release.Name }}-backend:8000"
+    NEXT_PUBLIC_API_URL: "http://13.51.86.244/api"
+  ingress:
+    enabled: false
   
-  # Resource settings
   resources:
     limits:
-      cpu: 300m
-      memory: 512Mi
+      cpu: 200m
+      memory: 200Mi
     requests:
-      cpu: 100m
-      memory: 128Mi
+      cpu: 50m
+      memory: 100Mi
   
-  # Health checks
   livenessProbe:
     enabled: true
     path: /api/health
@@ -113,7 +102,6 @@ frontend:
     failureThreshold: 6
     successThreshold: 1
   
-  # Scaling
   autoscaling:
     enabled: false
     minReplicas: 1
