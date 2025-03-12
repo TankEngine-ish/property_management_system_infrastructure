@@ -3,7 +3,7 @@ replicaCount: 1
 
 image:
   repository: tankengine/goapp
-  tag: "1.0.3"
+  tag: "1.0.4"
   pullPolicy: IfNotPresent
 
 service:
@@ -13,22 +13,19 @@ service:
 # Resource limits
 resources:
   limits:
-    cpu: 500m
-    memory: 512Mi
+    cpu: 500m # one-thousandth of a CPU core. For example, 500m is equivalent to 0.5 CPU cores
+    memory: 512Mi  # "Mi" stands for "Mebibyte"
   requests:
     cpu: 100m
     memory: 128Mi
 
-# Pod security context
 securityContext: {}
 
-# Container security context
 containerSecurityContext: {}
 
-# Liveness and readiness probes
 livenessProbe:
   enabled: true
-  initialDelaySeconds: 60  # Increased from 30
+  initialDelaySeconds: 60  # increased from 30
   periodSeconds: 10
   timeoutSeconds: 5
   failureThreshold: 6
@@ -37,14 +34,13 @@ livenessProbe:
 
 readinessProbe:
   enabled: true
-  initialDelaySeconds: 20  # Increased from 5
+  initialDelaySeconds: 20  # increased from 5
   periodSeconds: 10
   timeoutSeconds: 5
   failureThreshold: 6
   successThreshold: 1
   path: /health
 
-# Ingress configuration 
 ingress:
   enabled: false
   className: ""

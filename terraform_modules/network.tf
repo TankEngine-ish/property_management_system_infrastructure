@@ -10,8 +10,6 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
-
-# Define the VPC
 resource "aws_vpc" "kubernetesVPC" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
@@ -21,7 +19,6 @@ resource "aws_vpc" "kubernetesVPC" {
   }
 }
 
-# Define the Internet Gateway
 resource "aws_internet_gateway" "IGW_TF" {
   vpc_id = aws_vpc.kubernetesVPC.id
   tags = {
@@ -30,7 +27,6 @@ resource "aws_internet_gateway" "IGW_TF" {
 }
 
 
-# Public Subnet (for HAProxy / NAT Gateway)
 resource "aws_subnet" "public_subnet" {
   vpc_id                  = aws_vpc.kubernetesVPC.id
   cidr_block              = "10.0.0.0/24"
@@ -42,7 +38,6 @@ resource "aws_subnet" "public_subnet" {
 }
 
 
-# Private Subnet (for the Kubernetes Nodes)
 resource "aws_subnet" "private_subnet" {
   vpc_id                  = aws_vpc.kubernetesVPC.id
   cidr_block              = "10.0.1.0/24"
