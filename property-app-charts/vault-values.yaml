@@ -12,6 +12,7 @@ postgres:
     vault.hashicorp.com/agent-inject: "true"
     vault.hashicorp.com/role: "postgres-role"
     vault.hashicorp.com/agent-inject-secret-postgres-creds: "postgres/data/config"
+    vault.hashicorp.com/address: "http://vault.vault:8200" 
     vault.hashicorp.com/agent-inject-template-postgres-creds: |
       {{- with secret "postgres/data/config" -}}
       #!/bin/sh
@@ -59,6 +60,7 @@ backend:
     vault.hashicorp.com/agent-inject: "true"
     vault.hashicorp.com/role: "postgres-role"
     vault.hashicorp.com/agent-inject-secret-database-config: "postgres/data/config"
+    vault.hashicorp.com/address: "http://vault.vault:8200" 
     vault.hashicorp.com/agent-inject-template-database-config: |
       {{- with secret "postgres/data/config" -}}
       #!/bin/sh
