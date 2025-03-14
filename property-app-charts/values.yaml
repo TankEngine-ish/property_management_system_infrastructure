@@ -1,19 +1,15 @@
-
 global:
   environment: development
-
 
 postgres:
   # Note: Actual credentials are now stored in HashiCorp Vault
   database:
-    name: "propertydb"  # This is now just a placeholder/reference
-    # user and password fields removed - now managed by Vault
+    name: "propertydb"  # Just a placeholder/reference
   
-  # New Vault configuration
   vault:
     enabled: true
     role: "postgres-role"
-    secretPath: "postgres/data/config"
+    secretPath: "property-app/data/database"
   
   persistence:
     enabled: true
@@ -38,25 +34,21 @@ postgres:
 backend:
   enabled: true
   
-  # Actual credentials are now stored in HashiCorp Vault
   database:
-    name: "propertydb"  # This is now just a placeholder/reference
-    # user and password fields removed - now managed by Vault
+    name: "propertydb"  # placeholder
   
   vault:
     enabled: true
     role: "postgres-role"
-    secretPath: "postgres/data/config"
+    secretPath: "property-app/data/database"
     
-  # You can add annotations for the backend deployment to use 
-  # the same Vault credentials if needed
   podAnnotations:
     vault.hashicorp.com/agent-inject: "true"
     vault.hashicorp.com/role: "postgres-role"
-    vault.hashicorp.com/agent-inject-secret-database-config: "postgres/data/config"
+    vault.hashicorp.com/agent-inject-secret-database-config: "property-app/data/database"
     vault.hashicorp.com/agent-inject-template-database-config: |
-      {{- with secret "postgres/data/config" -}}
-      DATABASE_URL=postgres://{{ .data.data.user }}:{{ .data.data.password }}@property-app-postgres.property-app.svc.cluster.local:5432/{{ .data.data.database }}?sslmode=disable
+      {{- with secret "property-app/data/database" -}}
+      DATABASE_URL=postgres://{{ .Data.data.user }}:{{ .Data.data.password }}@property-app-postgres.property-app.svc.cluster.local:5432/{{ .Data.data.database }}?sslmode=disable
       {{- end -}}
   
   resources:

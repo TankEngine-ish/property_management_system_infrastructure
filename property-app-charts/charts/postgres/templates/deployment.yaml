@@ -72,11 +72,7 @@ spec:
               command:
                 - pg_isready
                 - -U
-                {{- if .Values.vault.enabled }}
-                - postgres  # Default superuser when using Vault
-                {{- else }}
                 - {{ .Values.database.user | quote }}
-                {{- end }}
                 - -d
                 - {{ .Values.database.name | quote }}
             initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
@@ -91,11 +87,7 @@ spec:
               command:
                 - pg_isready
                 - -U
-                {{- if .Values.vault.enabled }}
-                - postgres  # Default superuser when using Vault
-                {{- else }}
                 - {{ .Values.database.user | quote }}
-                {{- end }}
                 - -d
                 - {{ .Values.database.name | quote }}
             initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}

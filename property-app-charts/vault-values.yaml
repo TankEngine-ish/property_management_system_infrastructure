@@ -6,15 +6,15 @@ postgres:
   vault:
     enabled: true
     role: "postgres-role"
-    secretPath: "postgres/config"
+    secretPath: "property-app/data/database"
   
   podAnnotations:
     vault.hashicorp.com/agent-inject: "true"
     vault.hashicorp.com/role: "postgres-role"
-    vault.hashicorp.com/agent-inject-secret-postgres-creds: "postgres/config"
     vault.hashicorp.com/address: "http://vault.vault:8200" 
+    vault.hashicorp.com/agent-inject-secret-postgres-creds: "property-app/data/database"
     vault.hashicorp.com/agent-inject-template-postgres-creds: |
-      {{- with secret "postgres/config" -}}
+      {{- with secret "property-app/data/database" -}}
       #!/bin/sh
       export POSTGRES_USER="{{ .Data.data.user }}"
       export POSTGRES_PASSWORD="{{ .Data.data.password }}"
@@ -45,15 +45,15 @@ backend:
   vault:
     enabled: true
     role: "postgres-role"
-    secretPath: "postgres/config"
+    secretPath: "property-app/data/database"
   
   podAnnotations:
     vault.hashicorp.com/agent-inject: "true"
     vault.hashicorp.com/role: "postgres-role"
-    vault.hashicorp.com/agent-inject-secret-database-config: "postgres/config"  # Remove "data" from path
     vault.hashicorp.com/address: "http://vault.vault:8200" 
+    vault.hashicorp.com/agent-inject-secret-database-config: "property-app/data/database"
     vault.hashicorp.com/agent-inject-template-database-config: |
-      {{- with secret "postgres/config" -}}  # Match the path used above
+      {{- with secret "property-app/data/database" -}}
       #!/bin/sh
       export DATABASE_URL="postgres://{{ .Data.data.user }}:{{ .Data.data.password }}@property-app-postgres.property-app.svc.cluster.local:5432/{{ .Data.data.database }}?sslmode=disable"
       {{- end -}}

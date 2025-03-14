@@ -27,7 +27,7 @@ serviceAccount:
 vault:
   enabled: true
   role: "postgres-role"
-  secretPath: "postgres/data/config"
+  secretPath: "property-app/data/database"  # Changed from "postgres/data/config"
 
 podAnnotations: {}  # Will be filled in via vault-values.yaml
 
@@ -37,10 +37,9 @@ extraVolumeMounts: []  # Will be filled in via vault-values.yaml
 
 command: []  # Will be filled in via vault-values.yaml
 
-# database:
-#   name: propertydb
-#   user: pguser
-#   password: pgpassword
+database:
+  name: "mydatabase"
+  user: "myuser"
 
 resources:
   limits:
