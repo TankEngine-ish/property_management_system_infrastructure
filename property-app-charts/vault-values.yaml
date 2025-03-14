@@ -1,38 +1,30 @@
 postgres:
   serviceAccount:
-    create: false  # We'll create this manually or let ArgoCD do it
+    create: false
     name: "property-app-postgres"
   
   vault:
     enabled: true
     role: "postgres-role"
-    secretPath: "postgres/data/config"
+    secretPath: "postgres/config"
   
   podAnnotations:
     vault.hashicorp.com/agent-inject: "true"
     vault.hashicorp.com/role: "postgres-role"
-    vault.hashicorp.com/agent-inject-secret-postgres-creds: "postgres/data/config"
+    vault.hashicorp.com/agent-inject-secret-postgres-creds: "postgres/config"
     vault.hashicorp.com/address: "http://vault.vault:8200" 
     vault.hashicorp.com/agent-inject-template-postgres-creds: |
-      {{- with secret "postgres/data/config" -}}
+      {{- with secret "postgres/config" -}}
       #!/bin/sh
-      export POSTGRES_USER="{{ .data.data.user }}"
-      export POSTGRES_PASSWORD="{{ .data.data.password }}"
-      export POSTGRES_DB="{{ .data.data.database }}"
-      
-      # Create the user in PostgreSQL if it doesn't exist
-      psql -v ON_ERROR_STOP=1 --username "postgres" --dbname "postgres" <<-EOSQL
-          CREATE USER {{ .data.data.user }} WITH PASSWORD '{{ .data.data.password }}';
-          ALTER USER {{ .data.data.user }} WITH SUPERUSER;
-          CREATE DATABASE {{ .data.data.database }};
-          GRANT ALL PRIVILEGES ON DATABASE {{ .data.data.database }} TO {{ .data.data.user }};
-      EOSQL
-      {{- end }}
+      export POSTGRES_USER="{{ .Data.data.user }}"
+      export POSTGRES_PASSWORD="{{ .Data.data.password }}"
+      export POSTGRES_DB="{{ .Data.data.database }}"
+      {{- end -}}
   
   extraInitContainers:
     - name: init-postgres-scripts
       image: busybox
-      command: ['sh', '-c', 'cp /vault/secrets/postgres-creds /docker-entrypoint-initdb.d/init-db.sh && chmod +x /docker-entrypoint-initdb.d/init-db.sh']
+      command: ['sh', '-c', 'ls -la /vault/secrets/ && if [ -f /vault/secrets/postgres-creds ]; then cp /vault/secrets/postgres-creds /docker-entrypoint-initdb.d/init-db.sh && chmod +x /docker-entrypoint-initdb.d/init-db.sh; echo "File copied successfully"; else echo "Source file does not exist"; exit 1; fi']
       volumeMounts:
         - name: init-scripts
           mountPath: /docker-entrypoint-initdb.d
@@ -45,7 +37,6 @@ postgres:
     - name: init-scripts
       mountPath: /docker-entrypoint-initdb.d
 
-# Updates for the backend to use Vault as well
 backend:
   serviceAccount:
     create: true
@@ -54,15 +45,15 @@ backend:
   vault:
     enabled: true
     role: "postgres-role"
-    secretPath: "postgres/data/config"
+    secretPath: "postgres/config"
   
   podAnnotations:
     vault.hashicorp.com/agent-inject: "true"
     vault.hashicorp.com/role: "postgres-role"
-    vault.hashicorp.com/agent-inject-secret-database-config: "postgres/data/config"
+    vault.hashicorp.com/agent-inject-secret-database-config: "postgres/config"  # Remove "data" from path
     vault.hashicorp.com/address: "http://vault.vault:8200" 
     vault.hashicorp.com/agent-inject-template-database-config: |
-      {{- with secret "postgres/data/config" -}}
+      {{- with secret "postgres/config" -}}  # Match the path used above
       #!/bin/sh
-      export DATABASE_URL="postgres://{{ .data.data.user }}:{{ .data.data.password }}@property-app-postgres.property-app.svc.cluster.local:5432/{{ .data.data.database }}?sslmode=disable"
-      {{- end }}
+      export DATABASE_URL="postgres://{{ .Data.data.user }}:{{ .Data.data.password }}@property-app-postgres.property-app.svc.cluster.local:5432/{{ .Data.data.database }}?sslmode=disable"
+      {{- end -}}

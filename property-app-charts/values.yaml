@@ -23,11 +23,11 @@ postgres:
   
   resources:
     limits:
-      cpu: 400m
-      memory: 400Mi
+      cpu: 200m
+      memory: 300Mi
     requests:
       cpu: 50m
-      memory: 200Mi
+      memory: 150Mi
   
   autoscaling:
     enabled: false
@@ -61,11 +61,11 @@ backend:
   
   resources:
     limits:
-      cpu: 300m
+      cpu: 200m
       memory: 300Mi
     requests:
       cpu: 50m
-      memory: 100Mi
+      memory: 150Mi
   
   livenessProbe:
     enabled: true
