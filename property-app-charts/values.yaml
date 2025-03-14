@@ -4,11 +4,16 @@ global:
 
 
 postgres:
-  enabled: true
+  # Note: Actual credentials are now stored in HashiCorp Vault
   database:
-    name: "propertydb"
-    user: "pguser"
-    password: "pgpassword"  # In production, I use a secret reference
+    name: "propertydb"  # This is now just a placeholder/reference
+    # user and password fields removed - now managed by Vault
+  
+  # New Vault configuration
+  vault:
+    enabled: true
+    role: "postgres-role"
+    secretPath: "postgres/data/config"
   
   persistence:
     enabled: true
@@ -33,10 +38,26 @@ postgres:
 backend:
   enabled: true
   
+  # Actual credentials are now stored in HashiCorp Vault
   database:
-    name: "propertydb"
-    user: "pguser"
-    password: "pgpassword"  # I am using a secret reference
+    name: "propertydb"  # This is now just a placeholder/reference
+    # user and password fields removed - now managed by Vault
+  
+  vault:
+    enabled: true
+    role: "postgres-role"
+    secretPath: "postgres/data/config"
+    
+  # You can add annotations for the backend deployment to use 
+  # the same Vault credentials if needed
+  podAnnotations:
+    vault.hashicorp.com/agent-inject: "true"
+    vault.hashicorp.com/role: "postgres-role"
+    vault.hashicorp.com/agent-inject-secret-database-config: "postgres/data/config"
+    vault.hashicorp.com/agent-inject-template-database-config: |
+      {{- with secret "postgres/data/config" -}}
+      DATABASE_URL=postgres://{{ .data.data.user }}:{{ .data.data.password }}@property-app-postgres.property-app.svc.cluster.local:5432/{{ .data.data.database }}?sslmode=disable
+      {{- end -}}
   
   resources:
     limits:

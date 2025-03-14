@@ -1,0 +1,66 @@
+postgres:
+  serviceAccount:
+    create: false  # We'll create this manually or let ArgoCD do it
+    name: "property-app-postgres"
+  
+  vault:
+    enabled: true
+    role: "postgres-role"
+    secretPath: "postgres/data/config"
+  
+  podAnnotations:
+    vault.hashicorp.com/agent-inject: "true"
+    vault.hashicorp.com/role: "postgres-role"
+    vault.hashicorp.com/agent-inject-secret-postgres-creds: "postgres/data/config"
+    vault.hashicorp.com/agent-inject-template-postgres-creds: |
+      {{- with secret "postgres/data/config" -}}
+      #!/bin/sh
+      export POSTGRES_USER="{{ .data.data.user }}"
+      export POSTGRES_PASSWORD="{{ .data.data.password }}"
+      export POSTGRES_DB="{{ .data.data.database }}"
+      
+      # Create the user in PostgreSQL if it doesn't exist
+      psql -v ON_ERROR_STOP=1 --username "postgres" --dbname "postgres" <<-EOSQL
+          CREATE USER {{ .data.data.user }} WITH PASSWORD '{{ .data.data.password }}';
+          ALTER USER {{ .data.data.user }} WITH SUPERUSER;
+          CREATE DATABASE {{ .data.data.database }};
+          GRANT ALL PRIVILEGES ON DATABASE {{ .data.data.database }} TO {{ .data.data.user }};
+      EOSQL
+      {{- end }}
+  
+  extraInitContainers:
+    - name: init-postgres-scripts
+      image: busybox
+      command: ['sh', '-c', 'cp /vault/secrets/postgres-creds /docker-entrypoint-initdb.d/init-db.sh && chmod +x /docker-entrypoint-initdb.d/init-db.sh']
+      volumeMounts:
+        - name: init-scripts
+          mountPath: /docker-entrypoint-initdb.d
+  
+  extraVolumes:
+    - name: init-scripts
+      emptyDir: {}
+  
+  extraVolumeMounts:
+    - name: init-scripts
+      mountPath: /docker-entrypoint-initdb.d
+
+# Updates for the backend to use Vault as well
+backend:
+  serviceAccount:
+    create: true
+    name: "property-app-backend"
+  
+  vault:
+    enabled: true
+    role: "postgres-role"
+    secretPath: "postgres/data/config"
+  
+  podAnnotations:
+    vault.hashicorp.com/agent-inject: "true"
+    vault.hashicorp.com/role: "postgres-role"
+    vault.hashicorp.com/agent-inject-secret-database-config: "postgres/data/config"
+    vault.hashicorp.com/agent-inject-template-database-config: |
+      {{- with secret "postgres/data/config" -}}
+      #!/bin/sh
+      export DATABASE_URL="postgres://{{ .data.data.user }}:{{ .data.data.password }}@property-app-postgres.property-app.svc.cluster.local:5432/{{ .data.data.database }}?sslmode=disable"
+      {{- end }}

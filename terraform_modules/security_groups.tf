@@ -22,9 +22,7 @@ resource "aws_vpc_security_group_ingress_rule" "allow_haproxy_to_k8s_api" {
 resource "aws_vpc_security_group_ingress_rule" "allow_internal_k8s" {
   security_group_id = aws_security_group.kubernetes_sg.id
   cidr_ipv4         = "10.0.1.0/24" # Private subnet
-  from_port         = 0
-  to_port           = 65535
-  ip_protocol       = "tcp"
+  ip_protocol       = "-1"  # Allow all protocols (TCP, UDP, ICMP)
   description       = "Allow internal Kubernetes communication between nodes"
 }
 
@@ -56,6 +54,15 @@ resource "aws_vpc_security_group_ingress_rule" "allow_ssh_from_haproxy" {
   description                  = "Allow SSH access from HAProxy"
 }
 
+# Allow Istio webhook traffic. VERY IMPORTANT AS THIS FIXED THE ISSUE OF THE WEBHOOK NOT BEING ABLE TO COMMUNICATE WITH THE KUBERNETES API
+resource "aws_vpc_security_group_ingress_rule" "allow_istio_webhook" {
+  security_group_id = aws_security_group.kubernetes_sg.id
+  cidr_ipv4         = "0.0.0.0/0"  # Temporarily open to diagnose
+  from_port         = 15017
+  to_port           = 15017
+  ip_protocol       = "tcp"
+  description       = "Allow Istio webhook traffic"
+}
 
 
 

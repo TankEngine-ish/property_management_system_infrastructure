@@ -1,4 +1,3 @@
-# Default values for backend chart
 replicaCount: 1
 
 image:
@@ -51,6 +50,18 @@ ingress:
         - path: /
           pathType: ImplementationSpecific
   tls: []
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+vault:
+  enabled: false
+  role: ""
+  secretPath: ""
+
+podAnnotations: {}
 
   # Database configuration (used to build the .env file)
 database:
