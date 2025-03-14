@@ -1,6 +1,6 @@
 postgres:
   serviceAccount:
-    create: false
+    create: true
     name: "property-app-postgres"
   
   vault:
