@@ -53,13 +53,13 @@ ingress:
 
 serviceAccount:
   create: true
-  name: ""
+  name: "property-app-backend"
   annotations: {}
 
 vault:
-  enabled: false
-  role: ""
-  secretPath: ""
+  enabled: true
+  role: "postgres-role"
+  secretPath: "property-app/database"
 
 podAnnotations: {}
 
