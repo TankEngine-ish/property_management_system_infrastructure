@@ -17,50 +17,33 @@ postgres:
     vault.hashicorp.com/agent-inject-secret-postgres-creds: "property-app/database"
     vault.hashicorp.com/agent-inject-template-postgres-creds: |
       {{- with secret "property-app/database" -}}
-      #!/bin/sh
       export POSTGRES_USER="{{ .Data.data.user }}"
       export POSTGRES_PASSWORD="{{ .Data.data.password }}"
       export POSTGRES_DB="{{ .Data.data.database }}"
       {{- end -}}
   
-  # Only define init-scripts volume, NOT vault-secrets (which is created automatically)
-  extraVolumes:
-    - name: init-scripts
-      emptyDir: {}
+  # No extraInitContainers - let Vault handle initialization
   
-  # Only mount init-scripts to main container, NOT vault-secrets
-  extraVolumeMounts:
-    - name: init-scripts
-      mountPath: /docker-entrypoint-initdb.d
+  # No extraVolumes - let Vault handle volumes
   
-  # Define the init container but don't manually mount vault-secrets
-  extraInitContainers:
-    - name: postgres-init-scripts
-      image: registry.k8s.io/e2e-test-images/busybox:1.29-2
-      command:
-        - sh
-        - -c
-        - |
-          # Wait for the file to exist (up to 60 seconds)
-          for i in $(seq 1 60); do
-            if [ -f /vault/secrets/postgres-creds ]; then
-              echo "Found /vault/secrets/postgres-creds file, continuing..."
-              cp /vault/secrets/postgres-creds /docker-entrypoint-initdb.d/init-db.sh &&
-              chmod +x /docker-entrypoint-initdb.d/init-db.sh &&
-              echo "File copied successfully"
-              exit 0
-            fi
-            echo "Waiting for /vault/secrets/postgres-creds to be created... ($i/60)"
-            sleep 1
-          done
-          echo "Timed out waiting for /vault/secrets/postgres-creds"
-          ls -la /vault/secrets/
-          exit 1
-      volumeMounts:
-        - name: init-scripts
-          mountPath: /docker-entrypoint-initdb.d
-        # The vault-secrets mount is automatically added by the injector,
-        # we don't need to define it explicitly
+  # Let the main container initialize itself using the credentials file
+  command:
+    - "/bin/bash"
+    - "-c"
+    - |
+      # Give the Vault agent time to write the credentials file
+      for i in $(seq 1 60); do
+        if [ -f /vault/secrets/postgres-creds ]; then
+          echo "Found Vault credentials file, starting PostgreSQL..."
+          source /vault/secrets/postgres-creds
+          exec docker-entrypoint.sh postgres
+        fi
+        echo "Waiting for Vault credentials ($i/60)..."
+        sleep 1
+      done
+      echo "ERROR: Timed out waiting for Vault credentials"
+      ls -la /vault/secrets/
+      exit 1
 
 backend:
   serviceAccount:
