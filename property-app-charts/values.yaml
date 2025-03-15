@@ -37,6 +37,11 @@ backend:
   database:
     name: "propertydb"  # placeholder
   
+  serviceAccount:
+    create: true
+    name: "property-app-backend"
+    annotations: {}
+  
   vault:
     enabled: true
     role: "postgres-role"
