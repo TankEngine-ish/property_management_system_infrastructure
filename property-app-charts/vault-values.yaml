@@ -23,10 +23,17 @@ postgres:
       export POSTGRES_DB="{{ .Data.data.database }}"
       {{- end -}}
   
-  # Make sure strategy is defined if your chart supports it
-  strategy:
-    type: Recreate
+  # Only define init-scripts volume, NOT vault-secrets (which is created automatically)
+  extraVolumes:
+    - name: init-scripts
+      emptyDir: {}
   
+  # Only mount init-scripts to main container, NOT vault-secrets
+  extraVolumeMounts:
+    - name: init-scripts
+      mountPath: /docker-entrypoint-initdb.d
+  
+  # Define the init container but don't manually mount vault-secrets
   extraInitContainers:
     - name: postgres-init-scripts
       image: registry.k8s.io/e2e-test-images/busybox:1.29-2
@@ -52,23 +59,8 @@ postgres:
       volumeMounts:
         - name: init-scripts
           mountPath: /docker-entrypoint-initdb.d
-        # This is the volume that's missing in the deployment spec
-        - name: vault-secrets
-          mountPath: /vault/secrets
-  
-  extraVolumes:
-    - name: init-scripts
-      emptyDir: {}
-    - name: vault-secrets
-      emptyDir:
-        medium: Memory
-  
-  extraVolumeMounts:
-    - name: init-scripts
-      mountPath: /docker-entrypoint-initdb.d
-    # Also add it to the volumeMounts
-    - name: vault-secrets
-      mountPath: /vault/secrets
+        # The vault-secrets mount is automatically added by the injector,
+        # we don't need to define it explicitly
 
 backend:
   serviceAccount:
