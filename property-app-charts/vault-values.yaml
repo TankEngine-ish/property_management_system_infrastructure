@@ -6,7 +6,7 @@ postgres:
   vault:
     enabled: true
     role: "postgres-role"
-    secretPath: "property-app/data/database"
+    secretPath: "property-app/database"  # CHANGED: Removed /data/
   
   podAnnotations:
     # Disable Istio injection so that no Istio init containers interfere
@@ -16,15 +16,18 @@ postgres:
     vault.hashicorp.com/agent-inject-init-first: "true"
     vault.hashicorp.com/role: "postgres-role"
     vault.hashicorp.com/address: "http://vault.vault:8200"
-    vault.hashicorp.com/agent-inject-secret-postgres-creds: "property-app/data/database"
+    vault.hashicorp.com/agent-inject-secret-postgres-creds: "property-app/database"  # CHANGED: Removed /data/
     vault.hashicorp.com/agent-inject-template-postgres-creds: |
-      {{- with secret "property-app/data/database" -}}
+      {{- with secret "property-app/database" -}}  # CHANGED: Removed /data/
       #!/bin/sh
       export POSTGRES_USER="{{ .Data.data.user }}"
       export POSTGRES_PASSWORD="{{ .Data.data.password }}"
       export POSTGRES_DB="{{ .Data.data.database }}"
       {{- end -}}
   
+  # Note about init container ordering:
+  # The "z-init-postgres-scripts" name is actually correct - it starts with "z" to ensure
+  # it runs AFTER the Vault agent init container, which starts with "v" (alphabetical order)
   extraInitContainers:
     - name: z-init-postgres-scripts
       image: busybox
@@ -61,16 +64,16 @@ backend:
   vault:
     enabled: true
     role: "postgres-role"
-    secretPath: "property-app/data/database"
+    secretPath: "property-app/database"  # CHANGED: Removed /data/
   
   podAnnotations:
     vault.hashicorp.com/agent-inject: "true"
     vault.hashicorp.com/agent-inject-init-first: "true"
     vault.hashicorp.com/role: "postgres-role"
     vault.hashicorp.com/address: "http://vault.vault:8200"
-    vault.hashicorp.com/agent-inject-secret-database-config: "property-app/data/database"
+    vault.hashicorp.com/agent-inject-secret-database-config: "property-app/database"  # CHANGED: Removed /data/
     vault.hashicorp.com/agent-inject-template-database-config: |
-      {{- with secret "property-app/data/database" -}}
+      {{- with secret "property-app/database" -}}  # CHANGED: Removed /data/
       #!/bin/sh
       export DATABASE_URL="postgres://{{ .Data.data.user }}:{{ .Data.data.password }}@property-app-postgres.property-app.svc.cluster.local:5432/{{ .Data.data.database }}?sslmode=disable"
       {{- end -}}
