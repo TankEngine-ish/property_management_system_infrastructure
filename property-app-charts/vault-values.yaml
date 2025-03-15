@@ -9,11 +9,13 @@ postgres:
     secretPath: "property-app/data/database"
   
   podAnnotations:
+    # Disable Istio injection so that no Istio init containers interfere
     sidecar.istio.io/inject: "false"
+    # Enable Vault injection and force its init container to run first
     vault.hashicorp.com/agent-inject: "true"
-    vault.hashicorp.com/agent-inject-init-first: "true" # This is the first init container
+    vault.hashicorp.com/agent-inject-init-first: "true"
     vault.hashicorp.com/role: "postgres-role"
-    vault.hashicorp.com/address: "http://vault.vault:8200" 
+    vault.hashicorp.com/address: "http://vault.vault:8200"
     vault.hashicorp.com/agent-inject-secret-postgres-creds: "property-app/data/database"
     vault.hashicorp.com/agent-inject-template-postgres-creds: |
       {{- with secret "property-app/data/database" -}}
@@ -24,9 +26,21 @@ postgres:
       {{- end -}}
   
   extraInitContainers:
-    - name: init-postgres-scripts
+    - name: z-init-postgres-scripts
       image: busybox
-      command: ['sh', '-c', 'ls -la /vault/secrets/ && if [ -f /vault/secrets/postgres-creds ]; then cp /vault/secrets/postgres-creds /docker-entrypoint-initdb.d/init-db.sh && chmod +x /docker-entrypoint-initdb.d/init-db.sh; echo "File copied successfully"; else echo "Source file does not exist"; exit 1; fi']
+      command:
+        - sh
+        - -c
+        - >
+          ls -la /vault/secrets/ &&
+          if [ -f /vault/secrets/postgres-creds ]; then
+            cp /vault/secrets/postgres-creds /docker-entrypoint-initdb.d/init-db.sh &&
+            chmod +x /docker-entrypoint-initdb.d/init-db.sh &&
+            echo "File copied successfully";
+          else
+            echo "Source file does not exist";
+            exit 1;
+          fi
       volumeMounts:
         - name: init-scripts
           mountPath: /docker-entrypoint-initdb.d
@@ -51,9 +65,9 @@ backend:
   
   podAnnotations:
     vault.hashicorp.com/agent-inject: "true"
-    vault.hashicorp.com/agent-inject-init-first: "true" 
+    vault.hashicorp.com/agent-inject-init-first: "true"
     vault.hashicorp.com/role: "postgres-role"
-    vault.hashicorp.com/address: "http://vault.vault:8200" 
+    vault.hashicorp.com/address: "http://vault.vault:8200"
     vault.hashicorp.com/agent-inject-secret-database-config: "property-app/data/database"
     vault.hashicorp.com/agent-inject-template-database-config: |
       {{- with secret "property-app/data/database" -}}
