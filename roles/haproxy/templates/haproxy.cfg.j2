@@ -53,6 +53,4 @@ backend istio-gateway
     mode http
     balance roundrobin
     server istio-gateway 10.0.1.190:31217 check
-    option httpchk GET / HTTP/1.1
-    http-check expect status 200
     
