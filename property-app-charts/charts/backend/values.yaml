@@ -15,7 +15,7 @@ resources:
     cpu: 500m # one-thousandth of a CPU core. For example, 500m is equivalent to 0.5 CPU cores
     memory: 512Mi  # "Mi" stands for "Mebibyte"
   requests:
-    cpu: 100m
+    cpu: 50m
     memory: 128Mi
 
 securityContext: {}
