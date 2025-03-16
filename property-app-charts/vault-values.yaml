@@ -13,7 +13,7 @@ postgres:
     vault.hashicorp.com/agent-inject: "true"
     vault.hashicorp.com/agent-inject-init-first: "true"
     vault.hashicorp.com/role: "postgres-role"
-    vault.hashicorp.com/address: "http://vault.vault:8200"
+    vault.hashicorp.com/address: "http://vault.vault.svc.cluster.local:8200"
     vault.hashicorp.com/agent-inject-secret-postgres-creds: "property-app/database"
     vault.hashicorp.com/agent-inject-template-postgres-creds: |
       {{- with secret "property-app/database" -}}
