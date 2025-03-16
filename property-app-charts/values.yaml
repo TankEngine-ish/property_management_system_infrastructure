@@ -19,8 +19,8 @@ postgres:
   
   resources:
     limits:
-      cpu: 200m
-      memory: 300Mi
+      cpu: 100m
+      memory: 200Mi
     requests:
       cpu: 50m
       memory: 150Mi
@@ -59,8 +59,8 @@ backend:
   
   resources:
     limits:
-      cpu: 150m
-      memory: 250Mi
+      cpu: 100m
+      memory: 200Mi
     requests:
       cpu: 25m
       memory: 100Mi
@@ -97,8 +97,8 @@ frontend:
   
   resources:
     limits:
-      cpu: 200m
-      memory: 200Mi
+      cpu: 100m
+      memory: 150Mi
     requests:
       cpu: 50m
       memory: 100Mi
