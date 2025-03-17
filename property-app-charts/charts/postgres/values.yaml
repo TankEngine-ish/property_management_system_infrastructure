@@ -1,5 +1,3 @@
-# Default values for postgres chart
-
 # These fields allow chart users to override naming without modifying templates
 # nameOverride: ""
 # fullnameOverride: ""
@@ -21,17 +19,34 @@ persistence:
   accessMode: ReadWriteOnce
   size: 8Gi
 
+serviceAccount:
+  create: true  # I don't want to create it manually or via ArgoCD, eww.
+  name: "property-app-postgres"
+  annotations: {}
+
+vault:
+  enabled: true
+  role: "postgres-role"
+  secretPath: "property-app/database"  # Changed from "postgres/data/config"
+
+podAnnotations: {}  # Will be filled in via vault-values.yaml
+
+extraInitContainers: []  # Will be filled in via vault-values.yaml
+extraVolumes: []  # Will be filled in via vault-values.yaml
+extraVolumeMounts: []  # Will be filled in via vault-values.yaml
+
+command: []  # Will be filled in via vault-values.yaml
+
 database:
-  name: propertydb
-  user: pguser
-  password: pgpassword
+  name: "mydatabase"
+  user: "myuser"
 
 resources:
   limits:
     cpu: 500m
     memory: 512Mi
   requests:
-    cpu: 100m
+    cpu: 50m
     memory: 256Mi
 
 securityContext:

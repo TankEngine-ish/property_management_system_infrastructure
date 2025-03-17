@@ -10,6 +10,3 @@ data:
     POSTGRES_PASSWORD={{ .Values.database.password }}
     POSTGRES_DB={{ .Values.database.name }}
     DATABASE_URL=postgres://{{ .Values.database.user }}:{{ .Values.database.password }}@{{ .Release.Name }}-postgres.{{ .Release.Namespace }}.svc.cluster.local:5432/{{ .Values.database.name }}?sslmode=disable
-
-
-
