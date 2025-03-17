@@ -49,12 +49,10 @@ backend:
   serviceAccount:
     create: true
     name: "property-app-backend"
-  
   vault:
     enabled: true
     role: "postgres-role"
     secretPath: "property-app/database"
-  
   podAnnotations:
     vault.hashicorp.com/agent-inject: "true"
     vault.hashicorp.com/agent-inject-init-first: "true"
