@@ -56,10 +56,10 @@ backend:
   podAnnotations:
     vault.hashicorp.com/agent-inject: "true"
     vault.hashicorp.com/agent-init-first: "true"
-    traffic.sidecar.istio.io/excludeOutboundPorts: "8200"
-    proxy.istio.io/config: '{"holdApplicationUntilProxyStarts": true}'
+    # traffic.sidecar.istio.io/excludeOutboundPorts: "8200" # this is an annotation to ensure my application waits for Istio to be ready
+    # proxy.istio.io/config: '{"holdApplicationUntilProxyStarts": true}'
     vault.hashicorp.com/role: "postgres-role"
-    vault.hashicorp.com/address: "http://vault.vault.svc.cluster.local:8200" # CHANGED: Removed /cluster.local
+    vault.hashicorp.com/address: "http://vault.vault.svc.cluster.local:8200" 
     vault.hashicorp.com/agent-inject-secret-database-config: "property-app/database"
     vault.hashicorp.com/agent-inject-template-database-config: |
       {{- with secret "property-app/database" -}}
