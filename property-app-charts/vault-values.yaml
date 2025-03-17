@@ -64,3 +64,4 @@ backend:
       #!/bin/sh
       export DATABASE_URL="postgres://{{ .Data.data.user }}:{{ .Data.data.password }}@property-app-postgres.property-app.svc.cluster.local:5432/{{ .Data.data.database }}?sslmode=disable"
       {{- end -}}
+    traffic.sidecar.istio.io/excludeOutboundIPRanges: "10.100.139.236/32"
