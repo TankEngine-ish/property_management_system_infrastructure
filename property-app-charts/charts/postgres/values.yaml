@@ -27,7 +27,7 @@ serviceAccount:
 vault:
   enabled: true
   role: "postgres-role"
-  secretPath: "property-app/data/database"  # Changed from "postgres/data/config"
+  secretPath: "property-app/database"  # Changed from "postgres/data/config"
 
 podAnnotations: {}  # Will be filled in via vault-values.yaml
 
