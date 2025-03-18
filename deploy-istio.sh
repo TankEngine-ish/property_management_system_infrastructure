@@ -31,14 +31,13 @@ if [ -z "$MASTER_PRIVATE_IP" ]; then
   MASTER_PRIVATE_IP=$(kubectl get nodes -l node-role.kubernetes.io/control-plane -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
 fi
 
-# get my HAProxy public IP from the inventory folder
+
 HAPROXY_IP=$(grep "haproxy ansible_host" inventory/hosts.ini | awk '{print $2}')
 if [ -z "$HAPROXY_IP" ]; then
   # fallback to hard-coded value if the old one has changed for some goddamn reason
   HAPROXY_IP="13.51.86.244" 
 fi
 
-# script outputs:
 echo "- HAProxy Public IP: ${HAPROXY_IP}"
 echo ""
 echo "My application will be accessible at:"
