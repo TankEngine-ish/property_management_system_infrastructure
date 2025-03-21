@@ -1,4 +1,5 @@
 terraform.tfvars
 .terraform/
-istio-1.25.0
 production-values.yaml
+*-secrets.yaml
+istio-1.25.0

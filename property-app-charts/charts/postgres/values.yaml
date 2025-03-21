@@ -1,0 +1,84 @@
+# These fields allow chart users to override naming without modifying templates
+# nameOverride: ""
+# fullnameOverride: ""
+
+replicaCount: 1
+
+image:
+  repository: postgres
+  tag: "15"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 5432
+
+persistence:
+  enabled: false
+  storageClass: "local-storage"
+  accessMode: ReadWriteOnce
+  size: 8Gi
+
+serviceAccount:
+  create: true  # I don't want to create it manually or via ArgoCD, eww.
+  name: "property-app-postgres"
+  annotations: {}
+
+vault:
+  enabled: true
+  role: "postgres-role"
+  secretPath: "property-app/database"  # Changed from "postgres/data/config"
+
+podAnnotations: {}  # Will be filled in via vault-values.yaml
+
+extraInitContainers: []  # Will be filled in via vault-values.yaml
+extraVolumes: []  # Will be filled in via vault-values.yaml
+extraVolumeMounts: []  # Will be filled in via vault-values.yaml
+
+command: []  # Will be filled in via vault-values.yaml
+
+database:
+  name: "mydatabase"
+  user: "myuser"
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 50m
+    memory: 256Mi
+
+securityContext:
+  fsGroup: 999
+
+containerSecurityContext:
+  runAsUser: 999
+  runAsNonRoot: true
+
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+  successThreshold: 1
+
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+  successThreshold: 1
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []

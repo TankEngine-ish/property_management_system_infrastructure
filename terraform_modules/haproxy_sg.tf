@@ -1,4 +1,4 @@
-# security group for HAProxy in the Public Subnet
+
 resource "aws_security_group" "haproxy_sg" {
   name        = "haproxy-sg"
   vpc_id      = aws_vpc.kubernetesVPC.id
@@ -9,7 +9,6 @@ resource "aws_security_group" "haproxy_sg" {
   }
 }
 
-# HTTP traffic to HAProxy
 resource "aws_vpc_security_group_ingress_rule" "allow_http" {
   security_group_id = aws_security_group.haproxy_sg.id
   cidr_ipv4         = "0.0.0.0/0"
@@ -19,7 +18,6 @@ resource "aws_vpc_security_group_ingress_rule" "allow_http" {
   description       = "Allow HTTP access"
 }
 
-# HTTPS traffic to HAProxy
 resource "aws_vpc_security_group_ingress_rule" "allow_https" {
   security_group_id = aws_security_group.haproxy_sg.id
   cidr_ipv4         = "0.0.0.0/0"
@@ -28,8 +26,7 @@ resource "aws_vpc_security_group_ingress_rule" "allow_https" {
   ip_protocol       = "tcp"
   description       = "Allow HTTPS access"
 }
-
-# SSH access 
+ 
 resource "aws_vpc_security_group_ingress_rule" "allow_ssh_vpn" {
   security_group_id = aws_security_group.haproxy_sg.id
   cidr_ipv4         = "185.240.147.99/32" 

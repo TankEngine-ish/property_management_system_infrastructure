@@ -1,0 +1,69 @@
+postgres:
+  serviceAccount:
+    create: true
+    name: "property-app-postgres"
+  
+  vault:
+    enabled: true
+    role: "postgres-role"
+    secretPath: "property-app/database"
+  
+  podAnnotations:
+    sidecar.istio.io/inject: "false"
+    vault.hashicorp.com/agent-inject: "true"
+    vault.hashicorp.com/agent-init-first: "true"
+    vault.hashicorp.com/role: "postgres-role"
+    vault.hashicorp.com/address: "http://vault.vault.svc.cluster.local:8200"
+    vault.hashicorp.com/agent-inject-secret-postgres-creds: "property-app/database"
+    vault.hashicorp.com/agent-inject-template-postgres-creds: |
+      {{- with secret "property-app/database" -}}
+      export POSTGRES_USER="{{ .Data.data.user }}"
+      export POSTGRES_PASSWORD="{{ .Data.data.password }}"
+      export POSTGRES_DB="{{ .Data.data.database }}"
+      {{- end -}}
+  
+  # No extraInitContainers - let Vault handle initialization
+  
+  # No extraVolumes - let Vault handle volumes
+  
+  # Let the main container initialize itself using the credentials file
+  command:
+    - "/bin/bash"
+    - "-c"
+    - |
+      # Give the Vault agent time to write the credentials file
+      for i in $(seq 1 60); do
+        if [ -f /vault/secrets/postgres-creds ]; then
+          echo "Found Vault credentials file, starting PostgreSQL..."
+          source /vault/secrets/postgres-creds
+          exec docker-entrypoint.sh postgres
+        fi
+        echo "Waiting for Vault credentials ($i/60)..."
+        sleep 1
+      done
+      echo "ERROR: Timed out waiting for Vault credentials"
+      ls -la /vault/secrets/
+      exit 1
+
+backend:
+  serviceAccount:
+    create: true
+    name: "property-app-backend"
+  vault:
+    enabled: true
+    role: "postgres-role"
+    secretPath: "property-app/database"
+  podAnnotations:
+    vault.hashicorp.com/agent-inject: "true"
+    vault.hashicorp.com/agent-init-first: "true"
+    traffic.sidecar.istio.io/excludeOutboundPorts: "8200" # this is an annotation to ensure my application waits for Istio to be ready
+    proxy.istio.io/config: '{"holdApplicationUntilProxyStarts": true}'
+    vault.hashicorp.com/role: "postgres-role"
+    vault.hashicorp.com/address: "http://vault.vault.svc.cluster.local:8200" 
+    vault.hashicorp.com/agent-inject-secret-database-config: "property-app/database"
+    vault.hashicorp.com/agent-inject-template-database-config: |
+      {{- with secret "property-app/database" -}}
+      #!/bin/sh
+      export DATABASE_URL="postgres://{{ .Data.data.user }}:{{ .Data.data.password }}@property-app-postgres.property-app.svc.cluster.local:5432/{{ .Data.data.database }}?sslmode=disable"
+      {{- end -}}
+    

@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: property-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/TankEngine-ish/property_management_system_infrastructure.git
+    targetRevision: prod
+    path: property-app-charts
+    helm:
+      valueFiles:
+        - values.yaml
+        - vault-values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: property-app
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false   
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 2
+      backoff:
+        duration: 2m
+        factor: 2
+        maxDuration: 30m

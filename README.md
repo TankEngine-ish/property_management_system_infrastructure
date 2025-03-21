@@ -20,3 +20,7 @@ Elastic IPs (aws_eip.master_eip and aws_eip.worker_eip) for each instance.
 
 Enabling encryption by default
 Encryption by default allows you to ensure that all new EBS volumes created in your account are always encrypted, even if you don’t specify encrypted=true request parameter. You have the option to choose the default key to be AWS managed or a key that you create. If you use IAM policies that require the use of encrypted volumes, you can use this feature to avoid launch failures that would occur if unencrypted volumes were inadvertently referenced when an instance is launched. Before turning on encryption by default, make sure to go through some of the limitations in the consideration section at the end of this blog.
+
+potential use of image updater.
+
+

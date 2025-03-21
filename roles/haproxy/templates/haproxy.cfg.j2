@@ -41,3 +41,16 @@ listen stats
     stats uri /stats
     stats refresh 10s
     stats admin if TRUE
+
+# Application Frontend
+frontend app-frontend
+    bind *:80
+    mode http
+    default_backend istio-gateway
+
+# Application Backend (pointing to Istio Gateway)
+backend istio-gateway
+    mode http
+    balance roundrobin
+    server istio-gateway 10.0.1.190:31217 check
+    

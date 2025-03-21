@@ -1,0 +1,55 @@
+# Default values for frontend chart
+replicaCount: 1
+
+image:
+  repository: tankengine/nextapp
+  tag: "1.0.8"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 3000
+
+env:
+  NEXT_PUBLIC_API_URL: "http://13.51.86.244/api"
+
+resources:
+  limits:
+    cpu: 300m
+    memory: 512Mi
+  requests:
+    cpu: 50m
+    memory: 128Mi
+
+securityContext: {}
+
+containerSecurityContext: {}
+
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+  successThreshold: 1
+  path: /api/health
+
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+  successThreshold: 1
+  path: /api/health
+
+ingress:
+  enabled: false  # with 'enabled' set to 'false' Helm will not create an Ingress object anyway
+  className: ""
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
