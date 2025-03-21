@@ -23,5 +23,4 @@ Encryption by default allows you to ensure that all new EBS volumes created in y
 
 potential use of image updater.
 
-
-![alt text](assets/aws_diagram.png)
+![alt text](<assets/Data Flow Diagram (Copy) (2).jpg>)
