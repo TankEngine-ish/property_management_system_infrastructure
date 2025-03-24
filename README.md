@@ -1,5 +1,50 @@
-# property_management_system_infrastructure
-Infrastructure repo for provisioning and configuring a Kubernetes cluster on AWS using Terraform and Ansible. 
+# Project Overview 
+
+**And now for the main course!**
+
+This is my most comprehensive repostitory as it focuses entirely on the Continious Delivery/Deployment of my property app - https://github.com/TankEngine-ish/property_management_system_full_stack_app 
+
+Let's dive in!
+
+## Architecture Overview
+
+I have implemented a secure, scalable infrastructure that (hopefully) follows the best practices of many areas including cloud, IaC and credential security. In a nutshell it's a Kubernetes infrastructure on AWS for hosting my application, provisioned with Terraform and configured with Ansible. It also includes:
+
+- Kubernetes (kubeadm) cluster on AWS EC2 instances
+- Network isolation with public/private subnets
+- HAProxy load balancer for ingress traffic
+- Istio service mesh for microservices communication
+- ArgoCD for GitOps-style continuous delivery
+- HashiCorp Vault for secrets management
+- Helm charts for application deployment
+
+
+![alt text](<assets/Data Flow Diagram (Copy) (2).jpg>)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Unlike S3, you don’t create EC2 instances manually if they’re defined in your Terraform configuration. Terraform will automatically create them when you run terraform apply.
 
@@ -22,5 +67,3 @@ Enabling encryption by default
 Encryption by default allows you to ensure that all new EBS volumes created in your account are always encrypted, even if you don’t specify encrypted=true request parameter. You have the option to choose the default key to be AWS managed or a key that you create. If you use IAM policies that require the use of encrypted volumes, you can use this feature to avoid launch failures that would occur if unencrypted volumes were inadvertently referenced when an instance is launched. Before turning on encryption by default, make sure to go through some of the limitations in the consideration section at the end of this blog.
 
 potential use of image updater.
-
-![alt text](<assets/Data Flow Diagram (Copy) (2).jpg>)
