@@ -25,7 +25,7 @@ Here's a diagram I made to illustrate all the trains of thought I had when makin
 
 ## Creating & Configuring the Resources via Terraform
 
-First and foremost I used Terraform to provision my AWS infrastructure and make my environment reproducible and version-controllable. This is a cornerstone of modern DevOps practices. On top of that, I used Ansible for configuring HAProxy on the public subnet and my two K8s nodes on the private subnet along with Jinja2 templates utilization (not just simple bash scripting). 
+First and foremost I used Terraform to provision my AWS infrastructure and make my environment reproducible and version-controllable. On top of that, I used Ansible for configuring HAProxy on the public subnet and my two K8s nodes on the private subnet along with Jinja2 templates utilization (not just simple bash scripting). 
 
 Via Terraform I've tried to implement a proper network isolation pattern with:
 
@@ -47,11 +47,13 @@ I've created two main security groups with carefully scoped permissions:
 
 This security group controls access to my HAProxy instance in the public subnet:
 
+```
 terraformCopyresource "aws_security_group" "haproxy_sg" {
   name        = "haproxy-sg"
   vpc_id      = aws_vpc.kubernetesVPC.id
   description = "Security group for the HAProxy instance in the public subnet"
 }
+```
 
 Access rules for this group include:
 
@@ -64,16 +66,19 @@ I've limited SSH access to a single IP address and I've only opened the specific
 
 **Kubernetes Security Group (kubernetes_sg)**
 
-* This security group protects your Kubernetes nodes in the private subnet:
+* This security group protects my Kubernetes nodes in the private subnet:
 
+```
 terraformCopyresource "aws_security_group" "kubernetes_sg" {
   name        = "kubernetes-SG"
   vpc_id      = aws_vpc.kubernetesVPC.id
   description = "Security group for Kubernetes master and worker nodes (private subnet only)"
 }
+```
 
-* Here, I've implemented RBAC or Reference-based access control: Instead of using CIDR blocks, I am using security group references:
+* Here, I've defined a security group ingress rule, allowing HAProxy to communicate with the Kubernetes API server on port 6443.
 
+```
 terraformCopyresource "aws_vpc_security_group_ingress_rule" "allow_haproxy_to_k8s_api" {
   security_group_id            = aws_security_group.kubernetes_sg.id
   referenced_security_group_id = aws_security_group.haproxy_sg.id
@@ -82,20 +87,24 @@ terraformCopyresource "aws_vpc_security_group_ingress_rule" "allow_haproxy_to_k8
   ip_protocol                  = "tcp"
   description                  = "Allow HAProxy to communicate with Kubernetes API"
 }
+```
 
-The above block states that the Kubernetes API is only accessible from instances that belong to the HAProxy security group, not from any IP.
+The above block states that the Kubernetes API is only accessible from instances that **belong** to the HAProxy security group, not just from any IP.
 
 * Private subnet scoping: For internal Kubernetes communication, I've limited access to the private subnet CIDR:
 
+```
 terraformCopyresource "aws_vpc_security_group_ingress_rule" "allow_internal_k8s" {
   security_group_id = aws_security_group.kubernetes_sg.id
   cidr_ipv4         = "10.0.1.0/24" # Private subnet
   ip_protocol       = "-1"
   description       = "Allow internal Kubernetes communication between nodes"
 }
+```
 
 * Bastion pattern for SSH: SSH access to Kubernetes nodes is only allowed from the HAProxy (functioning as a bastion host):
 
+```
 terraformCopyresource "aws_vpc_security_group_ingress_rule" "allow_ssh_from_haproxy" {
   security_group_id            = aws_security_group.kubernetes_sg.id
   referenced_security_group_id = aws_security_group.haproxy_sg.id
@@ -104,11 +113,13 @@ terraformCopyresource "aws_vpc_security_group_ingress_rule" "allow_ssh_from_hapr
   ip_protocol                  = "tcp"
   description                  = "Allow SSH access from HAProxy"
 }
+```
 
 At this stage I was really wondering if I should use something like OpenVPN or even an actual bastion host (one of my other laptops at home) so I kept thinking about it and finally remembered that HAProxy could very well do the trick without much overhead.
 
 * NodePort access control: NodePorts are only accessible from the HAProxy, not directly from the internet:
 
+```
 terraformCopyresource "aws_vpc_security_group_ingress_rule" "allow_nodeport_from_haproxy" {
   security_group_id            = aws_security_group.kubernetes_sg.id
   referenced_security_group_id = aws_security_group.haproxy_sg.id
@@ -117,6 +128,7 @@ terraformCopyresource "aws_vpc_security_group_ingress_rule" "allow_nodeport_from
   ip_protocol                  = "tcp"
   description                  = "Allow NodePort range access from HAProxy"
 }
+```
 
 The reason behind the usage of NodePort was that HAProxy couldn't connect to the Istio Gateway due to security group configurations. But even prior to that the root cause of all this was that whenever I wanted to visit my application via an IP URL I had to forward two different ports - one for the backend and one for the frontend. I could've just as easily use nginx for that matter but I'm always up for a challenge. So I modified the HAProxy template in Ansible:
 
