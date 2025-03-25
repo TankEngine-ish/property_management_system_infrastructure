@@ -64,8 +64,6 @@ Access rules for this group include:
 - SSH (port 22) from a single specific IP (185.240.147.99/32) - not from anywhere on the internet
 - Kubernetes API (port 6443) from anywhere - needed for remote kubectl access
 
-This shows least privilege because:
-
 I've limited SSH access to a single IP address and I've only opened the specific ports needed for the HAProxy to function. All other ports remain closed by default.
 
 **Kubernetes Security Group (kubernetes_sg)**
@@ -80,7 +78,7 @@ terraformCopyresource "aws_security_group" "kubernetes_sg" {
 }
 ```
 
-* Here, I've defined a security group ingress rule, allowing HAProxy to communicate with the Kubernetes API server on port 6443.
+* Below, I've defined a security group ingress rule, allowing HAProxy to communicate with the Kubernetes API server on port 6443.
 
 ```
 terraformCopyresource "aws_vpc_security_group_ingress_rule" "allow_haproxy_to_k8s_api" {
@@ -161,9 +159,9 @@ This is the output of my istio deploy script.
 
 I've provisioned three EC2 instances:
 
-Master Node: A t3.medium instance in the private subnet for the Kubernetes control plane
-Worker Node: A t3.xlarge instance in the private subnet for running workloads
-HAProxy Server: A t3.micro instance in the public subnet for load balancing and SSH access
+* Master Node: A t3.medium instance in the private subnet for the Kubernetes control plane
+* Worker Node: A t3.xlarge instance in the private subnet for running workloads
+* HAProxy Server: A t3.micro instance in the public subnet for load balancing and SSH access
 
 ### State Management
 
@@ -172,8 +170,36 @@ I'm using a remote S3 backend for Terraform state management. It's best practice
 
 ## Ansible Deployment of kubeadm and HAProxy
 
-My Ansible playbooks handle the configuration of the EC2 instances, setting up the Kubernetes cluster and HAProxy. 
+Directory Structure:
 
+* Inventory (inventory/hosts.ini)
+* Playbooks (playbooks/)
+* Roles (roles/common, roles/master-node, etc.)
+
+
+Role-Based Organization:
+
+* common: Base configuration for all Kubernetes nodes
+* master-node: Control plane setup
+* worker-node: Worker node configuration
+* haproxy: Load balancer setup
+
+I can talk about my configuration for an hour but I would just like to focus on one thing. And that is the ***fetch*** module.
+
+So, at some point I had to ***join*** the worker node to the cluster (or in my case - just to the master node). The command is created after the master node is initialized with **kubeadm init**. Without this command, worker nodes cannot securely authenticate and join the cluster because there is a token involved which acts as a one-time secret that allows secure bootstrapping of the cluster.
+
+
+My use of the fetch module is to retrieve that **join command** from the master node:
+
+```
+yamlCopy- name: Fetch join command to control machine
+  fetch:
+    src: /home/ubuntu/joincommand.sh
+    dest: /tmp/joincommand.sh
+    flat: yes
+```
+
+This is more elegant than directly using SSH or SCP commands. It **pulls** the join command to my Ansible control machine first, then in a separate task, sends it to the worker. This is a very scalable approach in my opinion.
 
 ## Helm Charts
 
@@ -184,20 +210,25 @@ My Ansible playbooks handle the configuration of the EC2 instances, setting up t
 
 ![alt text](<assets/Screenshot from 2025-03-13 20-18-37.png>)
 
-
-
-## Istio
-
-
-
+**Been there - done all three!**
+Note: I'm not getting sponsored by HashiCorp (I wish I was).
 
 
 ## ArgoCD
 
+A Story in 3 Acts
+
+![alt text](<assets/Screenshot from 2025-03-18 21-42-20.png>)
+
+First Act - my Jenkins build creates a new temp branch with the latest versions of the property app in the infra repo.
+
+![alt text](<assets/Screenshot from 2025-03-18 21-41-39.png>)
+
+Second Act - it's up to the hypothetical DevOps team to review the Pull Request and merge the change to their "prod" branch.
+
 ![alt text](<assets/Screenshot from 2025-03-18 21-48-22.png>)
 
-
-
+Third Act - it's been approved and ArgoCD has been flawlessly synced with the repo.
 
 ## All the King's Namespaces
 
@@ -222,3 +253,8 @@ In my case, all these namespaces are necessary because:
 ## Issues I've faced and how I solved them
 
 - 
+
+
+
+
+
