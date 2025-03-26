@@ -10,7 +10,6 @@ Let's dive in!
 
 I have implemented a secure, scalable infrastructure that (hopefully) follows the best practices of many areas including cloud, IaC and credential security. In a nutshell it's a Kubernetes infrastructure on AWS for hosting my application, provisioned with Terraform and configured with Ansible. It also includes:
 
-- Kubernetes (kubeadm) cluster on AWS EC2 instances
 - Network isolation with public/private subnets
 - HAProxy load balancer for ingress traffic
 - Istio service mesh for the communication between the three layers (presentation (user interface), logic(business logic), and data (data storage))
@@ -91,7 +90,7 @@ terraformCopyresource "aws_vpc_security_group_ingress_rule" "allow_haproxy_to_k8
 }
 ```
 
-The above block states that the Kubernetes API is only accessible from instances that **belong** to the HAProxy security group, not just from any IP.
+The block above states that the Kubernetes API is only accessible from instances that **belong** to the HAProxy security group, not just from any IP.
 
 * Private subnet scoping: For internal Kubernetes communication, I've limited access to the private subnet CIDR:
 
@@ -179,20 +178,19 @@ Directory Structure:
 
 Role-Based Organization:
 
-* common: Base configuration for all Kubernetes nodes
-* master-node: Control plane setup
-* worker-node: Worker node configuration
-* haproxy: Load balancer setup
+* common: base configuration for all Kubernetes nodes
+* master-node: control plane setup
+* worker-node: worker node configuration
+* haproxy: load balancer setup
 
 I can talk about my configuration for an hour but I would just like to focus on one thing. And that is the ***fetch*** module.
 
 So, at some point I had to ***join*** the worker node to the cluster (or in my case - just to the master node). The command is created after the master node is initialized with **kubeadm init**. Without this command, worker nodes cannot securely authenticate and join the cluster because there is a token involved which acts as a one-time secret that allows secure bootstrapping of the cluster.
 
-
 My use of the fetch module is to retrieve that **join command** from the master node:
 
 ```
-yamlCopy- name: Fetch join command to control machine
+- name: Fetch join command to control machine
   fetch:
     src: /home/ubuntu/joincommand.sh
     dest: /tmp/joincommand.sh
@@ -200,6 +198,16 @@ yamlCopy- name: Fetch join command to control machine
 ```
 
 This is more elegant than directly using SSH or SCP commands. It **pulls** the join command to my Ansible control machine first, then in a separate task, sends it to the worker. This is a very scalable approach in my opinion.
+
+It's also worth touching upon the **Pull vs. Push** based approaches in Ansible configurations.
+
+![alt text](<assets/Screenshot from 2025-03-26 11-38-36.png>)
+Credit: Aasifa Shaik from Renesas Electronics
+
+Ansible uses a push-based architecture by default, and my implementation follows this standard model. My Ansible control node is initiating all operations and pushing configuration to the target nodes (master, worker, and HAProxy). My execution starts from my control node and flows outward to the managed nodes.
+However, my fetch operation above might appear "pull-like" because data is traveling from the target to the control node. The thing is, it's still the **control node that initiates this operation**, and it's just a temporary step within the broader push-based workflow.
+
+My setup could be converted to a pull-based approach if, for instance, I had a scheduled job on each node that ran ansible-pull to download and execute playbooks from a Git repository. But that's not what I've done here.
 
 ## Helm Charts
 
