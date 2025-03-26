@@ -202,6 +202,7 @@ This is more elegant than directly using SSH or SCP commands. It **pulls** the j
 It's also worth touching upon the **Pull vs. Push** based approaches in Ansible configurations.
 
 ![alt text](<assets/Screenshot from 2025-03-26 11-38-36.png>)
+
 Credit: Aasifa Shaik from Renesas Electronics
 
 Ansible uses a push-based architecture by default, and my implementation follows this standard model. My Ansible control node is initiating all operations and pushing configuration to the target nodes (master, worker, and HAProxy). My execution starts from my control node and flows outward to the managed nodes.
@@ -209,12 +210,48 @@ However, my fetch operation above might appear "pull-like" because data is trave
 
 My setup could be converted to a pull-based approach if, for instance, I had a scheduled job on each node that ran ansible-pull to download and execute playbooks from a Git repository. But that's not what I've done here.
 
-## Helm Charts
-
-
-
 ## HashiCorp Vault
 
+This one took a long time ago to make it not break the ArgoCD deployment process because as it turned out it was coming in conflict with Istio at runtime.
+The issue manifested as connection failures when the Vault agent tried to authenticate with the Vault server.
+The error logs consistently showed:
+```
+error="Put \"http://vault.vault.svc:8200/v1/auth/kubernetes/login\": dial tcp 10.100.139.236:8200: connect: connection refused"
+```
+
+This error persisted despite both services being correctly deployed and individually functioning. The backend pods would remain in a **pending** or initializing state indefinitely because the Vault agent could not authenticate, preventing the application from retrieving the database credentials it needed to start.
+Understanding the Root Cause
+After slamming my head against the desk for a whole day, I determined that the issue involved a complex interaction between how Istio and Vault initialize within the pod. The issue stemmed from:
+
+- the initialization order: when a pod starts, initialization happens in a specific sequence. Init containers run first, followed by regular containers. Both Vault (through the agent-injector) and Istio add their own init containers and sidecars to pods.
+
+- this one is also incredibly important: Istio works by intercepting all network traffic in the pod using iptables rules. These rules redirect traffic through the Istio proxy (Envoy), which then applies service mesh policies.
+
+- also timing conflict: the Vault agent needs to connect to the Vault server during initialization to fetch secrets. However, if Istio's init container runs first, it sets up network interception before Vault can establish its connection. Since the Istio proxy sidecar isn't fully initialized at this point, the connection attempts fail with "connection refused" errors.
+
+DNS Resolution Issues: In some tests, we observed that the Vault agent could resolve the Vault service's IP address correctly, but couldn't establish a TCP connection to it, suggesting that network policies or interception was the issue rather than DNS resolution itself.
+
+I tried so many things it's insane. 
+
+Finally, the smartest solution came from an obscure github thread few years ago about implementing a specific set of annotations that addressed the timing and network interception issues without disabling Istio's functionality:
+yamlCopyvault.hashicorp.com/agent-init-first: "true"
+traffic.sidecar.istio.io/excludeOutboundPorts: "8200"
+proxy.istio.io/config: '{"holdApplicationUntilProxyStarts": true}'
+These annotations work together to:
+
+* change initialization order: vault.hashicorp.com/agent-init-first: "true" ensures the Vault init container runs before Istio's init container, giving it a chance to authenticate with Vault before Istio sets up network interception.
+* exclude Vault traffic: traffic.sidecar.istio.io/excludeOutboundPorts: "8200" tells Istio not to intercept traffic to port 8200 (Vault's API port), allowing direct communication between the Vault agent and Vault server.
+* proxy.istio.io/config: '{"holdApplicationUntilProxyStarts": true}' so that the application containers don't start until the Istio proxy is fully initialized, preventing timing issues during startup.
+
+### Lessons Learned 
+
+This integration challenge taught me some lessons about working with complex Kubernetes ecosystems:
+
+When using multiple advanced Kubernetes components like service meshes and secret management systems, understand how they interact at the container and network levels.
+The sequence in which containers and init containers start can have significant impacts.
+Test the integration of complex components early in the development process to identify potential conflicts. Not in production, duh.
+
+Other than that I think I've implemented a relatively (for my level of knowledge at least) sophisticated secrets management workflow. You can check the files in my property-app-charts folder.
 
 ![alt text](<assets/Screenshot from 2025-03-13 20-18-37.png>)
 
@@ -238,6 +275,10 @@ Second Act - it's up to the hypothetical DevOps team to review the Pull Request 
 
 Third Act - it's been approved and ArgoCD has been flawlessly synced with the repo.
 
+## Helm Charts
+
+TO BE ADDED!
+
 ## All the King's Namespaces
 
 ![alt text](<assets/Screenshot from 2025-03-16 22-02-01.png>)
@@ -256,11 +297,11 @@ In my case, all these namespaces are necessary because:
 
 - property-app: this is ***me***.
 
-- vault-0: it holds the main Vault server and vault-agent-injector which injects secrets into pods.
+- vault: it holds the main Vault server and vault-agent-injector which injects secrets into pods.
 
 ## Issues I've faced and how I solved them
 
-- 
+TO BE ADDED!
 
 
 
